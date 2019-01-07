@@ -9,6 +9,8 @@ module plugin{
         }
 
         onShow():void{
+            Laya.stage.bgColor = "#d11d1a"
+            console.log("FYD======")
             
         }
     }

@@ -4,6 +4,8 @@ class GameMain{
     constructor()
     {
         Laya.init(600,400, WebGL);
+
+        plugin.PluginManager.getInstance().pushPlugin("PLUGIN_LOGIN");
     }
 }
 new GameMain();

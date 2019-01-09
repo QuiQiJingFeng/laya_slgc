@@ -1,5 +1,5 @@
 module plugin{
-    export const PluginConfig = {
-        "PLUGIN_LOGIN" : plugin.PluginLogin,
+    export class PluginConfig {
+        public PLUGIN_LOGIN = plugin.PluginLogin;
     }
 }

@@ -2,12 +2,11 @@ module plugin{
     
     export class PluginManager{
         static __instance:PluginManager = undefined;
-        private _curPlugin:any;
-        private _pluginStack:Array<any>;
+        private _curPlugin:plugin.PluginBase;
+        private _pluginCache:{};
+        private _pluginStack:Array<string>;
         constructor(){
-            let self = this;
-            self._pluginStack = new Array<plugin.PluginBase>();
-            self._curPlugin = null;
+            this._pluginStack = new Array<string>();
         }
 
         public static getInstance(){
@@ -16,34 +15,47 @@ module plugin{
             }
             return PluginManager.__instance;
         }
-
-        public setBottomPlugin(pluginName,...args:any[]){
-            let length = this._pluginStack.length;
-            this._pluginStack.splice(0, length);
-            this.pushPlugin(pluginName);
-        }
-
-        public pushPlugin(pluginName){
+        //压入一个插件
+        public pushPlugin(pluginName,...args: any[]){
             let pluginClass = plugin.PluginConfig[pluginName]
             if(pluginClass == undefined){
                 throw new Error("pluginName:not exist=>"+pluginName);
             }
-            let lastPlugin = this._pluginStack[this._pluginStack.length-1];
-            if(lastPlugin !== undefined){
-                lastPlugin.onHide();
+            let aPlugin = this._pluginCache[pluginName]
+            if (aPlugin == undefined){
+                aPlugin = new pluginClass();
+                aPlugin.setName(pluginName);
+                this._pluginCache[pluginName] = aPlugin;
             }
-
-            let aPlugin = new pluginClass();
-            this._pluginStack.push(aPlugin);
+            
+            this._curPlugin = aPlugin;
+            this._pluginStack.push(pluginName);
+            
+            
             aPlugin.onLoad();
-            aPlugin.onShow();
+            aPlugin.onStart();
+            aPlugin.onShow(...args);
         }
 
+        //弹出一个插件
         public popPlugin(){
-            let aPlugin = this._pluginStack.pop();
+            let pluginName = this._pluginStack.pop();
+            let aPlugin = this._pluginCache[pluginName];
+            aPlugin.onHide();
+            aPlugin.onStop();
+            let preName = this._pluginStack[this._pluginStack.length - 1];
+            let prePlugin = this._pluginCache[pluginName];
+            if (prePlugin != undefined){
+                prePlugin.onStart();
+            }
+        }
+
+        //销毁某个插件
+        public destroyPlugin(pluginName){
+            let aPlugin = this._pluginCache[pluginName];
+            this._pluginStack
+
             aPlugin.onDestroy();
-            let lastPlugin = this._pluginStack[this._pluginStack.length-1];
-            lastPlugin.onShow();
         }
     }
 }

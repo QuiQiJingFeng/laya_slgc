@@ -12,10 +12,6 @@ module plugin{
         getName():string{
             return this._pluginName;
         }
-
-        onLoad():void{
-            
-        }
         //插件被销毁
         onDestroy():void{
 
@@ -33,7 +29,7 @@ module plugin{
         onStop():void{
 
         }
-        //当前插件重新处于活跃状态
+        //插件被激活
         onStart():void{
 
         }

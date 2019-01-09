@@ -30,9 +30,6 @@ module plugin{
             
             this._curPlugin = aPlugin;
             this._pluginStack.push(pluginName);
-            
-            
-            aPlugin.onLoad();
             aPlugin.onStart();
             aPlugin.onShow(...args);
         }

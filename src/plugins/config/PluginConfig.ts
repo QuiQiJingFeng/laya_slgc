@@ -1,5 +1,5 @@
 module plugin{
     export class PluginConfig {
-        public PLUGIN_LOGIN = plugin.PluginLogin;
+        public static PLUGIN_LOGIN = plugin.PluginLogin;
     }
 }

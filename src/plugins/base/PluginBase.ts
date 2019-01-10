@@ -30,7 +30,7 @@ module plugin{
 
         }
         //插件被激活
-        onStart():void{
+        onActive():void{
 
         }
     }

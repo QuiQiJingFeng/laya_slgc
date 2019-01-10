@@ -30,29 +30,42 @@ module plugin{
             
             this._curPlugin = aPlugin;
             this._pluginStack.push(pluginName);
-            aPlugin.onStart();
+            aPlugin.onActive();
             aPlugin.onShow(...args);
         }
 
         //弹出一个插件
-        public popPlugin(){
+        public popPlugin():void{
             let pluginName = this._pluginStack.pop();
             let aPlugin = this._pluginCache[pluginName];
             aPlugin.onHide();
             aPlugin.onStop();
             let preName = this._pluginStack[this._pluginStack.length - 1];
-            let prePlugin = this._pluginCache[pluginName];
+            let prePlugin = this._pluginCache[preName];
             if (prePlugin != undefined){
-                prePlugin.onStart();
+                prePlugin.onActive();
             }
         }
 
         //销毁某个插件
-        public destroyPlugin(pluginName){
+        public destroyPlugin(pluginName):void{
             let aPlugin = this._pluginCache[pluginName];
-            this._pluginStack
-
             aPlugin.onDestroy();
+            this._pluginCache[pluginName] = undefined;
+        }
+
+        //销毁所有的插件
+        public destroyAllPlugins():void{
+            for (const key in this._pluginCache) {
+                let aPlugin = this._pluginCache[key];
+                aPlugin.onDestroy();
+            }
+            this._pluginCache = {};
+        }
+
+        //清空堆栈记录
+        public clearStack():void{
+            this._pluginStack = new Array<string>();
         }
     }
 }

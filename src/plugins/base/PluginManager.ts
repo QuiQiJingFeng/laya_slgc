@@ -3,7 +3,7 @@ module plugin{
     export class PluginManager{
         static __instance:PluginManager = undefined;
         private _curPlugin:plugin.PluginBase;
-        private _pluginCache:{};
+        private _pluginCache:{[key:string] : plugin.PluginBase} = {};
         private _pluginStack:Array<string>;
         constructor(){
             this._pluginStack = new Array<string>();
@@ -21,7 +21,11 @@ module plugin{
             if(pluginClass == undefined){
                 throw new Error("pluginName:not exist=>"+pluginName);
             }
-            let aPlugin = this._pluginCache[pluginName]
+
+            let aPlugin = undefined
+            if(this._pluginCache.hasOwnProperty(pluginName)){
+                aPlugin = this._pluginCache[pluginName]
+            }
             if (aPlugin == undefined){
                 aPlugin = new pluginClass();
                 aPlugin.setName(pluginName);

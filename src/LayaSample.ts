@@ -3,9 +3,21 @@ import WebGL = Laya.WebGL;
 class GameMain{
     constructor()
     {
-        Laya.init(600,400, WebGL);
+        Laya.MiniAdpter.init();
+        Laya.init(960,640, WebGL);
         this.setResoulution();
-        this.onLoaded();
+        let resuorces = [
+			"./res/atlas/activity.atlas",
+			"./res/atlas/common.atlas",
+			"./res/atlas/comp.atlas",
+		]
+		resuorces.forEach(resource => {
+            Laya.loader.load(resource,Laya.Handler.create(this, this.onLoaded),Laya.Handler.create(this, this.onLoading));
+        });
+    }
+
+    private onLoading(number):void{
+        console.log("加载进度%d",number);
     }
 
     private setResoulution():void{

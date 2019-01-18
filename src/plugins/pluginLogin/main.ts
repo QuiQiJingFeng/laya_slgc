@@ -1,16 +1,13 @@
 module plugin{
     export class PluginLogin extends plugin.PluginBase {
+        private _mainView:Laya.Node;
         constructor(){
             super()
-        }
-
-        onLoad():void{
-            
+            this._mainView = new ui.plugins.pluginLogin.MainViewUI();
+            Laya.stage.addChild(this._mainView);
         }
 
         onShow():void{
-            Laya.stage.bgColor = "#d11d1a"
-            console.log("FYD======")
             
         }
     }

@@ -4,7 +4,11 @@ module plugin{
         constructor(){
             super()
             this._mainView = new ui.plugins.pluginLogin.MainViewUI();
-            Laya.stage.addChild(this._mainView);
+ 
+
+
+            plugin.Resolution.getInstance().setResolutionNode(this._mainView)
+            
         }
 
         onShow():void{

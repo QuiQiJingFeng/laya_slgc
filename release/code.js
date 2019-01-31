@@ -54080,8 +54080,8 @@ var plugin;
         __extends(PluginLogin, _super);
         function PluginLogin() {
             var _this = _super.call(this) || this;
-            var mainView = new ui.plugins.pluginLogin.MainViewUI();
-            Laya.stage.addChild(mainView);
+            _this._mainView = new ui.plugins.pluginLogin.MainViewUI();
+            plugin.Resolution.getInstance().setResolutionNode(_this._mainView);
             return _this;
         }
         PluginLogin.prototype.onShow = function () {
@@ -54102,6 +54102,100 @@ var plugin;
     plugin.PluginConfig = PluginConfig;
 })(plugin || (plugin = {}));
 //# sourceMappingURL=PluginConfig.js.map
+var plugin;
+(function (plugin) {
+    var Resolution = (function () {
+        function Resolution() {
+        }
+        Resolution.getInstance = function () {
+            if (Resolution.__instance == undefined) {
+                Resolution.__instance = new Resolution();
+            }
+            return Resolution.__instance;
+        };
+        Resolution.prototype.setResoulution = function () {
+            Laya.stage.screenMode = "horizontal";
+            var autoscale = "fixedwidth";
+            //如果先达到Width
+            if (Laya.Browser.width / Laya.stage.width <= Laya.Browser.height / Laya.stage.height) {
+                autoscale = "fixedwidth";
+            }
+            else {
+                autoscale = "fixedheight";
+            }
+            Laya.stage.scaleMode = autoscale;
+            if (autoscale == "fixedwidth") {
+                //适应宽度，此时舞台宽度跟浏览器宽度是等价的
+                //1个坐标单位 等价于多少个物理像素
+                var unit = Laya.Browser.clientWidth / Laya.stage.designWidth;
+                //舞台实际暂用的物理像素个数
+                var realHeight = Laya.stage.designHeight * unit;
+                //黑边暂用的物理像素的个数
+                var blackRealHeight = Laya.Browser.clientHeight - realHeight;
+                // Laya.stage.y += blackRealHeight/2/unit;
+                Resolution.diffHight = blackRealHeight / 2 / unit;
+            }
+            else if (autoscale == "fixedheight") {
+                //适应宽度，此时舞台宽度跟浏览器宽度是等价的
+                //1个坐标单位 等价于多少个物理像素
+                var unit = Laya.Browser.clientHeight / Laya.stage.designHeight;
+                //舞台实际暂用的物理像素个数
+                var realWidth = Laya.stage.designWidth * unit;
+                //黑边暂用的物理像素的个数
+                var blackRealWidth = Laya.Browser.clientWidth - realWidth;
+                // Laya.stage.x += blackRealWidth/2/unit;
+                Resolution.diffWidth = blackRealWidth / 2 / unit;
+            }
+        };
+        Resolution.prototype.recurate = function (node) {
+            var count = node.numChildren;
+            for (var index = 0; index < count; index++) {
+                var child = node.getChildAt(index);
+                if (child.name == "TOP_LEFT") {
+                    child.x -= Resolution.diffWidth;
+                    child.y -= Resolution.diffHight;
+                }
+                else if (child.name == "TOP_RIGHT") {
+                    child.x += Resolution.diffWidth;
+                    child.y -= Resolution.diffHight;
+                }
+                else if (child.name == "BOTTOM_LEFT") {
+                    child.x -= Resolution.diffWidth;
+                    child.y += Resolution.diffHight;
+                }
+                else if (child.name == "BOTTOM_RIGHT") {
+                    child.x += Resolution.diffWidth;
+                    child.y += Resolution.diffHight;
+                }
+                child.mouseEnabled = true;
+                child.mouseThrough = true;
+                this.recurate(child);
+            }
+        };
+        Resolution.prototype.setResolutionNode = function (node) {
+            var self = this;
+            node.x += Resolution.diffWidth;
+            node.y += Resolution.diffHight;
+            var bg = node.getChildByName("BACK_GROUND");
+            if (bg) {
+                bg.x -= Resolution.diffWidth;
+                bg.y -= Resolution.diffHight;
+                bg.width += 2 * Resolution.diffWidth;
+                bg.height += 2 * Resolution.diffHight;
+            }
+            this.recurate(node);
+            Laya.stage.addChild(node);
+        };
+        return Resolution;
+    }());
+    Resolution.__instance = undefined;
+    //左偏移量
+    Resolution.diffWidth = 0;
+    //右偏移量
+    Resolution.diffHight = 0;
+    plugin.Resolution = Resolution;
+})(plugin || (plugin = {}));
+//# sourceMappingURL=Resolution.js.map
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -54126,7 +54220,7 @@ var ui;
                 };
                 return MainViewUI;
             }(View));
-            MainViewUI.uiView = { "type": "View", "props": { "width": 960, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 960, "skin": "common/Img_bd12.png", "sizeGrid": "12,12,11,13", "height": 640 }, "child": [{ "type": "Button", "props": { "y": 295, "x": 357, "skin": "common/btn_number.png" } }, { "type": "Button", "props": { "y": -3, "x": -1, "skin": "common/btn_number.png" } }, { "type": "Button", "props": { "y": 0, "x": 725, "skin": "common/btn_number.png" } }, { "type": "Button", "props": { "y": 571, "x": 723, "skin": "common/btn_number.png" } }, { "type": "Button", "props": { "y": 571, "x": -3, "skin": "common/btn_number.png" } }] }] };
+            MainViewUI.uiView = { "type": "View", "props": { "width": 960, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 960, "skin": "common/icon_frame.png", "sizeGrid": "14,17,20,14", "name": "BACK_GROUND", "height": 640 } }, { "type": "Box", "props": { "y": -3, "x": -3 }, "child": [{ "type": "Button", "props": { "y": 298, "x": 360, "skin": "common/btn_green.png", "name": "CENTER" } }, { "type": "Button", "props": { "x": 2, "skin": "common/btn_green.png", "name": "TOP_LEFT" } }, { "type": "Button", "props": { "y": 3, "x": 728, "skin": "common/btn_green.png", "name": "TOP_RIGHT" } }, { "type": "Button", "props": { "y": 574, "x": 726, "skin": "common/btn_green.png", "name": "BOTTOM_RIGHT" } }, { "type": "Button", "props": { "y": 574, "skin": "common/btn_green.png", "name": "BOTTOM_LEFT" } }] }] };
             pluginLogin.MainViewUI = MainViewUI;
         })(pluginLogin = plugins.pluginLogin || (plugins.pluginLogin = {}));
     })(plugins = ui.plugins || (ui.plugins = {}));
@@ -54139,50 +54233,21 @@ var GameMain = (function () {
         var _this = this;
         Laya.MiniAdpter.init();
         Laya.init(960, 640, WebGL);
-        this.setResoulution();
+        this.initSuccess = false;
         var resuorces = [
             "./res/atlas/activity.atlas",
             "./res/atlas/common.atlas",
             "./res/atlas/comp.atlas",
         ];
+        Laya.stage.bgColor = "#ABCDEF";
+        plugin.Resolution.getInstance().setResoulution();
         resuorces.forEach(function (resource) {
             Laya.loader.load(resource, Laya.Handler.create(_this, _this.onLoaded), Laya.Handler.create(_this, _this.onLoading));
         });
     }
     GameMain.prototype.onLoading = function (number) {
         console.log("加载进度%d", number);
-    };
-    GameMain.prototype.setResoulution = function () {
-        Laya.stage.screenMode = "horizontal";
-        var autoscale = "fixedwidth";
-        //如果先达到Width
-        if (Laya.Browser.width / Laya.stage.width <= Laya.Browser.height / Laya.stage.height) {
-            autoscale = "fixedwidth";
-        }
-        else {
-            autoscale = "fixedheight";
-        }
-        Laya.stage.scaleMode = autoscale;
-        if (autoscale == "fixedwidth") {
-            //适应宽度，此时舞台宽度跟浏览器宽度是等价的
-            //1个坐标单位 等价于多少个物理像素
-            var unit = Laya.Browser.clientWidth / Laya.stage.desginWidth;
-            //舞台实际暂用的物理像素个数
-            var realHeight = Laya.stage.desginHeight * unit;
-            //黑边暂用的物理像素的个数
-            var blackRealHeight = Laya.Browser.clientHeight - realHeight;
-            Laya.stage.y += blackRealHeight / 2 / unit;
-        }
-        else if (autoscale == "fixedheight") {
-            //适应宽度，此时舞台宽度跟浏览器宽度是等价的
-            //1个坐标单位 等价于多少个物理像素
-            var unit = Laya.Browser.clientHeight / Laya.stage.desginHeight;
-            //舞台实际暂用的物理像素个数
-            var realWidth = Laya.stage.desginWidth * unit;
-            //黑边暂用的物理像素的个数
-            var blackRealWidth = Laya.Browser.clientWidth - realWidth;
-            Laya.stage.x += blackRealWidth / 2 / unit;
-        }
+        //不能放到onLoaded中,比如在浏览器中点击了下刷新
     };
     GameMain.prototype.onLoaded = function () {
         plugin.PluginManager.getInstance().pushPlugin("PLUGIN_LOGIN");

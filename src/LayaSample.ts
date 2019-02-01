@@ -12,11 +12,9 @@ class GameMain{
 			"./res/atlas/common.atlas",
 			"./res/atlas/comp.atlas",
 		]
-        Laya.stage.bgColor = "#ABCDEF"
-        plugin.Resolution.getInstance().setResoulution()
-		resuorces.forEach(resource => {
-            Laya.loader.load(resource,Laya.Handler.create(this, this.onLoaded),Laya.Handler.create(this, this.onLoading));
-        });
+        Laya.stage.bgColor = "#ABCDEF";
+        game.Resolution.getInstance().setResoulution();
+		Laya.loader.load(resuorces,Laya.Handler.create(this, this.onLoaded),Laya.Handler.create(this, this.onLoading));
         
     }
 

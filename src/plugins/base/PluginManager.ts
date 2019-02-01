@@ -31,7 +31,9 @@ module plugin{
                 aPlugin.setName(pluginName);
                 this._pluginCache[pluginName] = aPlugin;
             }
-            
+            if(this._curPlugin){
+                this._curPlugin.onStop();
+            }
             this._curPlugin = aPlugin;
             this._pluginStack.push(pluginName);
             aPlugin.onActive();

@@ -1,4 +1,4 @@
-module plugin {
+module game {
     export class Resolution {
         static __instance = undefined;
         //左偏移量
@@ -61,25 +61,25 @@ module plugin {
             let count = node.numChildren;
             for (var index = 0; index < count; index++) {
                 let child = node.getChildAt(index) as Laya.Sprite;
-                if(child.name == "TOP_LEFT"){
-                    child.x -= Resolution.diffWidth;
-                    child.y -= Resolution.diffHight;
-                    if(iphoneX){
-                        child.x += 70;
+                if(child.hasOwnProperty("layoutX")){
+                    if(child["layoutX"] == "LEFT"){
+                        child.x -= Resolution.diffWidth;
+                        if(iphoneX){
+                            child.x += 70;
+                        }
+                        
+                    }else if (child["layoutX"] == "RIGHT"){
+                        child.x += Resolution.diffWidth;
                     }
-                }else if(child.name == "TOP_RIGHT"){
-                    child.x += Resolution.diffWidth;
-                    child.y -= Resolution.diffHight;
-                }else if(child.name == "BOTTOM_LEFT"){
-                    child.x -= Resolution.diffWidth;
-                    child.y += Resolution.diffHight;
-                    if(iphoneX){
-                        child.x += 70;
-                    }
-                }else if(child.name == "BOTTOM_RIGHT"){
-                    child.x += Resolution.diffWidth;
-                    child.y += Resolution.diffHight;
                 }
+                if(child.hasOwnProperty("layoutY")){
+                    if(child["layoutY"] == "TOP"){
+                        child.y -= Resolution.diffHight;
+                    }else if (child["layoutY"] == "BOTTOM"){
+                        child.y += Resolution.diffHight;
+                    }
+                }
+ 
                 if (child instanceof laya.ui.Box) {
                     child.mouseEnabled = true;
                     child.mouseThrough = true;

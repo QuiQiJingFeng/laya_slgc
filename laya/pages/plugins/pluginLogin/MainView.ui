@@ -2,7 +2,8 @@
     "x":0,
     "type":"View",
     "selectedBox":16,
-    "selecteID":7,
+    "selecteID":24,
+    "referenceLines":null,
     "props":{"width":960,"sceneColor":"#000000","height":640},
     "nodeParent":-1,
     "label":"View",
@@ -23,8 +24,7 @@
             "hasChild":false,
             "compId":12,
             "child":[
-                ],
-            "$HIDDEN":false
+                ]
         },
         {
             "x":15,
@@ -41,66 +41,117 @@
                 {
                     "x":30,
                     "type":"Button",
-                    "props":{"y":298,"x":360,"skin":"common/btn_green.png"},
+                    "props":{"y":567,"x":0,"skin":"common/btn_green.png","layoutY":"BOTTOM","layoutX":"LEFT"},
                     "nodeParent":16,
                     "label":"Button",
-                    "isOpen":true,
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
-                    "compId":3,
+                    "compId":20,
                     "child":[
                         ]
                 },
                 {
                     "x":30,
                     "type":"Button",
-                    "props":{"y":6,"x":3,"skin":"common/btn_green.png","name":"TOP_LEFT"},
+                    "props":{"y":308,"x":370,"skin":"common/btn_green.png"},
                     "nodeParent":16,
-                    "label":"Button(TOP_LEFT)",
+                    "label":"Button",
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
-                    "compId":4,
+                    "compId":21,
                     "child":[
                         ]
                 },
                 {
                     "x":30,
                     "type":"Button",
-                    "props":{"y":7,"x":721,"skin":"common/btn_green.png","name":"TOP_RIGHT"},
+                    "props":{"y":567,"x":720,"skin":"common/btn_green.png","layoutY":"BOTTOM","layoutX":"RIGHT"},
                     "nodeParent":16,
-                    "label":"Button(TOP_RIGHT)",
+                    "label":"Button",
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
-                    "compId":5,
+                    "compId":22,
                     "child":[
                         ]
                 },
                 {
                     "x":30,
                     "type":"Button",
-                    "props":{"y":570,"x":721,"skin":"common/btn_green.png","name":"BOTTOM_RIGHT"},
+                    "props":{"y":0,"x":720,"skin":"common/btn_green.png","layoutY":"TOP","layoutX":"RIGHT"},
                     "nodeParent":16,
-                    "label":"Button(BOTTOM_RIGHT)",
+                    "label":"Button",
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
-                    "compId":6,
+                    "compId":23,
                     "child":[
                         ]
                 },
                 {
                     "x":30,
                     "type":"Button",
-                    "props":{"y":570,"x":6,"skin":"common/btn_green.png","name":"BOTTOM_LEFT"},
+                    "props":{"y":0,"x":0,"skin":"common/btn_green.png","layoutY":"TOP","layoutX":"LEFT"},
                     "nodeParent":16,
-                    "label":"Button(BOTTOM_LEFT)",
+                    "label":"Button",
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
-                    "compId":7,
+                    "compId":24,
+                    "child":[
+                        ]
+                },
+                {
+                    "x":30,
+                    "type":"Button",
+                    "props":{"y":308,"x":0,"skin":"common/btn_green.png","layoutX":"LEFT"},
+                    "nodeParent":16,
+                    "label":"Button",
+                    "isDirectory":false,
+                    "isAniNode":true,
+                    "hasChild":false,
+                    "compId":25,
+                    "child":[
+                        ]
+                },
+                {
+                    "x":30,
+                    "type":"Button",
+                    "props":{"y":308,"x":720,"skin":"common/btn_green.png","layoutX":"RIGHT"},
+                    "nodeParent":16,
+                    "label":"Button",
+                    "isDirectory":false,
+                    "isAniNode":true,
+                    "hasChild":false,
+                    "compId":26,
+                    "child":[
+                        ]
+                },
+                {
+                    "x":30,
+                    "type":"Button",
+                    "props":{"y":567,"x":370,"skin":"common/btn_green.png","layoutY":"BOTTOM"},
+                    "nodeParent":16,
+                    "label":"Button",
+                    "isDirectory":false,
+                    "isAniNode":true,
+                    "hasChild":false,
+                    "compId":27,
+                    "child":[
+                        ]
+                },
+                {
+                    "x":30,
+                    "type":"Button",
+                    "props":{"y":0,"x":370,"skin":"common/btn_green.png","layoutY":"TOP"},
+                    "nodeParent":16,
+                    "label":"Button",
+                    "isDirectory":false,
+                    "isAniNode":true,
+                    "hasChild":false,
+                    "compId":28,
                     "child":[
                         ]
                 }]

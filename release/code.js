@@ -53961,149 +53961,8 @@ if (typeof define === 'function' && define.amd){
         }
     });
 }
-var plugin;
-(function (plugin) {
-    var PluginBase = (function () {
-        function PluginBase() {
-        }
-        PluginBase.prototype.setName = function (pluginName) {
-            this._pluginName = pluginName;
-        };
-        PluginBase.prototype.getName = function () {
-            return this._pluginName;
-        };
-        //插件被销毁
-        PluginBase.prototype.onDestroy = function () {
-        };
-        //插件被显示
-        PluginBase.prototype.onShow = function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-        };
-        //插件被隐藏
-        PluginBase.prototype.onHide = function () {
-        };
-        //插件停止 当前插件不是活跃插件了
-        PluginBase.prototype.onStop = function () {
-        };
-        //插件被激活
-        PluginBase.prototype.onActive = function () {
-        };
-        return PluginBase;
-    }());
-    plugin.PluginBase = PluginBase;
-})(plugin || (plugin = {}));
-//# sourceMappingURL=PluginBase.js.map
-var plugin;
-(function (plugin) {
-    var PluginManager = (function () {
-        function PluginManager() {
-            this._pluginCache = {};
-            this._pluginStack = new Array();
-        }
-        PluginManager.getInstance = function () {
-            if (PluginManager.__instance == undefined) {
-                PluginManager.__instance = new PluginManager();
-            }
-            return PluginManager.__instance;
-        };
-        //压入一个插件
-        PluginManager.prototype.pushPlugin = function (pluginName) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
-            var pluginClass = plugin.PluginConfig[pluginName];
-            if (pluginClass == undefined) {
-                throw new Error("pluginName:not exist=>" + pluginName);
-            }
-            var aPlugin = undefined;
-            if (this._pluginCache.hasOwnProperty(pluginName)) {
-                aPlugin = this._pluginCache[pluginName];
-            }
-            if (aPlugin == undefined) {
-                aPlugin = new pluginClass();
-                aPlugin.setName(pluginName);
-                this._pluginCache[pluginName] = aPlugin;
-            }
-            this._curPlugin = aPlugin;
-            this._pluginStack.push(pluginName);
-            aPlugin.onActive();
-            aPlugin.onShow.apply(aPlugin, args);
-        };
-        //弹出一个插件
-        PluginManager.prototype.popPlugin = function () {
-            var pluginName = this._pluginStack.pop();
-            var aPlugin = this._pluginCache[pluginName];
-            aPlugin.onHide();
-            aPlugin.onStop();
-            var preName = this._pluginStack[this._pluginStack.length - 1];
-            var prePlugin = this._pluginCache[preName];
-            if (prePlugin != undefined) {
-                prePlugin.onActive();
-            }
-        };
-        //销毁某个插件
-        PluginManager.prototype.destroyPlugin = function (pluginName) {
-            var aPlugin = this._pluginCache[pluginName];
-            aPlugin.onDestroy();
-            this._pluginCache[pluginName] = undefined;
-        };
-        //销毁所有的插件
-        PluginManager.prototype.destroyAllPlugins = function () {
-            for (var key in this._pluginCache) {
-                var aPlugin = this._pluginCache[key];
-                aPlugin.onDestroy();
-            }
-            this._pluginCache = {};
-        };
-        //清空堆栈记录
-        PluginManager.prototype.clearStack = function () {
-            this._pluginStack = new Array();
-        };
-        return PluginManager;
-    }());
-    PluginManager.__instance = undefined;
-    plugin.PluginManager = PluginManager;
-})(plugin || (plugin = {}));
-//# sourceMappingURL=PluginManager.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var plugin;
-(function (plugin) {
-    var PluginLogin = (function (_super) {
-        __extends(PluginLogin, _super);
-        function PluginLogin() {
-            var _this = _super.call(this) || this;
-            _this._mainView = new ui.plugins.pluginLogin.MainViewUI();
-            plugin.Resolution.getInstance().setResolutionNode(_this._mainView);
-            return _this;
-        }
-        PluginLogin.prototype.onShow = function () {
-        };
-        return PluginLogin;
-    }(plugin.PluginBase));
-    plugin.PluginLogin = PluginLogin;
-})(plugin || (plugin = {}));
-//# sourceMappingURL=main.js.map
-var plugin;
-(function (plugin) {
-    var PluginConfig = (function () {
-        function PluginConfig() {
-        }
-        return PluginConfig;
-    }());
-    PluginConfig.PLUGIN_LOGIN = plugin.PluginLogin;
-    plugin.PluginConfig = PluginConfig;
-})(plugin || (plugin = {}));
-//# sourceMappingURL=PluginConfig.js.map
-var plugin;
-(function (plugin) {
+var game;
+(function (game) {
     var Resolution = (function () {
         function Resolution() {
         }
@@ -54156,27 +54015,24 @@ var plugin;
             var count = node.numChildren;
             for (var index = 0; index < count; index++) {
                 var child = node.getChildAt(index);
-                if (child.name == "TOP_LEFT") {
-                    child.x -= Resolution.diffWidth;
-                    child.y -= Resolution.diffHight;
-                    if (iphoneX) {
-                        child.x += 70;
+                if (child.hasOwnProperty("layoutX")) {
+                    if (child["layoutX"] == "LEFT") {
+                        child.x -= Resolution.diffWidth;
+                        if (iphoneX) {
+                            child.x += 70;
+                        }
+                    }
+                    else if (child["layoutX"] == "RIGHT") {
+                        child.x += Resolution.diffWidth;
                     }
                 }
-                else if (child.name == "TOP_RIGHT") {
-                    child.x += Resolution.diffWidth;
-                    child.y -= Resolution.diffHight;
-                }
-                else if (child.name == "BOTTOM_LEFT") {
-                    child.x -= Resolution.diffWidth;
-                    child.y += Resolution.diffHight;
-                    if (iphoneX) {
-                        child.x += 70;
+                if (child.hasOwnProperty("layoutY")) {
+                    if (child["layoutY"] == "TOP") {
+                        child.y -= Resolution.diffHight;
                     }
-                }
-                else if (child.name == "BOTTOM_RIGHT") {
-                    child.x += Resolution.diffWidth;
-                    child.y += Resolution.diffHight;
+                    else if (child["layoutY"] == "BOTTOM") {
+                        child.y += Resolution.diffHight;
+                    }
                 }
                 if (child instanceof laya.ui.Box) {
                     child.mouseEnabled = true;
@@ -54208,9 +54064,155 @@ var plugin;
     Resolution.diffWidth = 0;
     //右偏移量
     Resolution.diffHight = 0;
-    plugin.Resolution = Resolution;
-})(plugin || (plugin = {}));
+    game.Resolution = Resolution;
+})(game || (game = {}));
 //# sourceMappingURL=Resolution.js.map
+var plugin;
+(function (plugin) {
+    var PluginBase = (function () {
+        function PluginBase(mainView) {
+            game.Resolution.getInstance().setResolutionNode(mainView);
+            this._mainView = mainView;
+        }
+        PluginBase.prototype.setName = function (pluginName) {
+            this._pluginName = pluginName;
+        };
+        PluginBase.prototype.getName = function () {
+            return this._pluginName;
+        };
+        //插件被销毁
+        PluginBase.prototype.onDestroy = function () {
+            this._mainView.destroy(true);
+        };
+        //插件被显示
+        PluginBase.prototype.onShow = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+        };
+        //插件被隐藏
+        PluginBase.prototype.onHide = function () {
+        };
+        //插件停止 当前插件不是活跃插件了
+        PluginBase.prototype.onStop = function () {
+            this._mainView.visible = false;
+        };
+        //插件被激活
+        PluginBase.prototype.onActive = function () {
+            this._mainView.visible = true;
+        };
+        return PluginBase;
+    }());
+    plugin.PluginBase = PluginBase;
+})(plugin || (plugin = {}));
+//# sourceMappingURL=PluginBase.js.map
+var plugin;
+(function (plugin) {
+    var PluginManager = (function () {
+        function PluginManager() {
+            this._pluginCache = {};
+            this._pluginStack = new Array();
+        }
+        PluginManager.getInstance = function () {
+            if (PluginManager.__instance == undefined) {
+                PluginManager.__instance = new PluginManager();
+            }
+            return PluginManager.__instance;
+        };
+        //压入一个插件
+        PluginManager.prototype.pushPlugin = function (pluginName) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            var pluginClass = plugin.PluginConfig[pluginName];
+            if (pluginClass == undefined) {
+                throw new Error("pluginName:not exist=>" + pluginName);
+            }
+            var aPlugin = undefined;
+            if (this._pluginCache.hasOwnProperty(pluginName)) {
+                aPlugin = this._pluginCache[pluginName];
+            }
+            if (aPlugin == undefined) {
+                aPlugin = new pluginClass();
+                aPlugin.setName(pluginName);
+                this._pluginCache[pluginName] = aPlugin;
+            }
+            if (this._curPlugin) {
+                this._curPlugin.onStop();
+            }
+            this._curPlugin = aPlugin;
+            this._pluginStack.push(pluginName);
+            aPlugin.onActive();
+            aPlugin.onShow.apply(aPlugin, args);
+        };
+        //弹出一个插件
+        PluginManager.prototype.popPlugin = function () {
+            var pluginName = this._pluginStack.pop();
+            var aPlugin = this._pluginCache[pluginName];
+            aPlugin.onHide();
+            aPlugin.onStop();
+            var preName = this._pluginStack[this._pluginStack.length - 1];
+            var prePlugin = this._pluginCache[preName];
+            if (prePlugin != undefined) {
+                prePlugin.onActive();
+            }
+        };
+        //销毁某个插件
+        PluginManager.prototype.destroyPlugin = function (pluginName) {
+            var aPlugin = this._pluginCache[pluginName];
+            aPlugin.onDestroy();
+            this._pluginCache[pluginName] = undefined;
+        };
+        //销毁所有的插件
+        PluginManager.prototype.destroyAllPlugins = function () {
+            for (var key in this._pluginCache) {
+                var aPlugin = this._pluginCache[key];
+                aPlugin.onDestroy();
+            }
+            this._pluginCache = {};
+        };
+        //清空堆栈记录
+        PluginManager.prototype.clearStack = function () {
+            this._pluginStack = new Array();
+        };
+        return PluginManager;
+    }());
+    PluginManager.__instance = undefined;
+    plugin.PluginManager = PluginManager;
+})(plugin || (plugin = {}));
+//# sourceMappingURL=PluginManager.js.map
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var plugin;
+(function (plugin) {
+    var PluginLogin = (function (_super) {
+        __extends(PluginLogin, _super);
+        function PluginLogin() {
+            return _super.call(this, new ui.plugins.pluginLogin.MainViewUI()) || this;
+        }
+        PluginLogin.prototype.onShow = function () {
+        };
+        return PluginLogin;
+    }(plugin.PluginBase));
+    plugin.PluginLogin = PluginLogin;
+})(plugin || (plugin = {}));
+//# sourceMappingURL=main.js.map
+var plugin;
+(function (plugin) {
+    var PluginConfig = (function () {
+        function PluginConfig() {
+        }
+        return PluginConfig;
+    }());
+    PluginConfig.PLUGIN_LOGIN = plugin.PluginLogin;
+    plugin.PluginConfig = PluginConfig;
+})(plugin || (plugin = {}));
+//# sourceMappingURL=PluginConfig.js.map
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -54235,7 +54237,7 @@ var ui;
                 };
                 return MainViewUI;
             }(View));
-            MainViewUI.uiView = { "type": "View", "props": { "width": 960, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 960, "skin": "common/icon_frame.png", "sizeGrid": "14,17,20,14", "name": "BACK_GROUND", "height": 640 } }, { "type": "Box", "props": { "y": -3, "x": -3 }, "child": [{ "type": "Button", "props": { "y": 298, "x": 360, "skin": "common/btn_green.png", "name": "CENTER" } }, { "type": "Button", "props": { "y": 6, "x": 3, "skin": "common/btn_green.png", "name": "TOP_LEFT" } }, { "type": "Button", "props": { "y": 7, "x": 721, "skin": "common/btn_green.png", "name": "TOP_RIGHT" } }, { "type": "Button", "props": { "y": 570, "x": 721, "skin": "common/btn_green.png", "name": "BOTTOM_RIGHT" } }, { "type": "Button", "props": { "y": 570, "x": 6, "skin": "common/btn_green.png", "name": "BOTTOM_LEFT" } }] }] };
+            MainViewUI.uiView = { "type": "View", "props": { "width": 960, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 960, "skin": "common/icon_frame.png", "sizeGrid": "14,17,20,14", "name": "BACK_GROUND", "height": 640 } }, { "type": "Box", "props": { "y": -3, "x": -3 }, "child": [{ "type": "Button", "props": { "y": 567, "x": 0, "skin": "common/btn_green.png", "layoutY": "BOTTOM", "layoutX": "LEFT" } }, { "type": "Button", "props": { "y": 308, "x": 370, "skin": "common/btn_green.png" } }, { "type": "Button", "props": { "y": 567, "x": 720, "skin": "common/btn_green.png", "layoutY": "BOTTOM", "layoutX": "RIGHT" } }, { "type": "Button", "props": { "y": 0, "x": 720, "skin": "common/btn_green.png", "layoutY": "TOP", "layoutX": "RIGHT" } }, { "type": "Button", "props": { "y": 0, "x": 0, "skin": "common/btn_green.png", "layoutY": "TOP", "layoutX": "LEFT" } }, { "type": "Button", "props": { "y": 308, "x": 0, "skin": "common/btn_green.png", "layoutX": "LEFT" } }, { "type": "Button", "props": { "y": 308, "x": 720, "skin": "common/btn_green.png", "layoutX": "RIGHT" } }, { "type": "Button", "props": { "y": 567, "x": 370, "skin": "common/btn_green.png", "layoutY": "BOTTOM" } }, { "type": "Button", "props": { "y": 0, "x": 370, "skin": "common/btn_green.png", "layoutY": "TOP" } }] }] };
             pluginLogin.MainViewUI = MainViewUI;
         })(pluginLogin = plugins.pluginLogin || (plugins.pluginLogin = {}));
     })(plugins = ui.plugins || (ui.plugins = {}));
@@ -54245,7 +54247,6 @@ var WebGL = Laya.WebGL;
 // 程序入口
 var GameMain = (function () {
     function GameMain() {
-        var _this = this;
         Laya.MiniAdpter.init();
         Laya.init(960, 640, WebGL);
         this.initSuccess = false;
@@ -54255,10 +54256,8 @@ var GameMain = (function () {
             "./res/atlas/comp.atlas",
         ];
         Laya.stage.bgColor = "#ABCDEF";
-        plugin.Resolution.getInstance().setResoulution();
-        resuorces.forEach(function (resource) {
-            Laya.loader.load(resource, Laya.Handler.create(_this, _this.onLoaded), Laya.Handler.create(_this, _this.onLoading));
-        });
+        game.Resolution.getInstance().setResoulution();
+        Laya.loader.load(resuorces, Laya.Handler.create(this, this.onLoaded), Laya.Handler.create(this, this.onLoading));
     }
     GameMain.prototype.onLoading = function (number) {
         console.log("加载进度%d", number);

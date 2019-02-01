@@ -54148,12 +54148,20 @@ var plugin;
             }
         };
         Resolution.prototype.recurate = function (node) {
+            var iphoneX = false;
+            if (Laya.Browser.clientWidth / Laya.Browser.clientHeight > 2) {
+                // iphone x
+                iphoneX = true;
+            }
             var count = node.numChildren;
             for (var index = 0; index < count; index++) {
                 var child = node.getChildAt(index);
                 if (child.name == "TOP_LEFT") {
                     child.x -= Resolution.diffWidth;
                     child.y -= Resolution.diffHight;
+                    if (iphoneX) {
+                        child.x += 70;
+                    }
                 }
                 else if (child.name == "TOP_RIGHT") {
                     child.x += Resolution.diffWidth;
@@ -54162,13 +54170,18 @@ var plugin;
                 else if (child.name == "BOTTOM_LEFT") {
                     child.x -= Resolution.diffWidth;
                     child.y += Resolution.diffHight;
+                    if (iphoneX) {
+                        child.x += 70;
+                    }
                 }
                 else if (child.name == "BOTTOM_RIGHT") {
                     child.x += Resolution.diffWidth;
                     child.y += Resolution.diffHight;
                 }
-                child.mouseEnabled = true;
-                child.mouseThrough = true;
+                if (child instanceof laya.ui.Box) {
+                    child.mouseEnabled = true;
+                    child.mouseThrough = true;
+                }
                 this.recurate(child);
             }
         };
@@ -54183,6 +54196,8 @@ var plugin;
                 bg.width += 2 * Resolution.diffWidth;
                 bg.height += 2 * Resolution.diffHight;
             }
+            //View/Box等容器需要将以下两个开关打开,否则处于其外边的按钮无法点击
+            node.mouseThrough = true;
             this.recurate(node);
             Laya.stage.addChild(node);
         };
@@ -54220,7 +54235,7 @@ var ui;
                 };
                 return MainViewUI;
             }(View));
-            MainViewUI.uiView = { "type": "View", "props": { "width": 960, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 960, "skin": "common/icon_frame.png", "sizeGrid": "14,17,20,14", "name": "BACK_GROUND", "height": 640 } }, { "type": "Box", "props": { "y": -3, "x": -3 }, "child": [{ "type": "Button", "props": { "y": 298, "x": 360, "skin": "common/btn_green.png", "name": "CENTER" } }, { "type": "Button", "props": { "x": 2, "skin": "common/btn_green.png", "name": "TOP_LEFT" } }, { "type": "Button", "props": { "y": 3, "x": 728, "skin": "common/btn_green.png", "name": "TOP_RIGHT" } }, { "type": "Button", "props": { "y": 574, "x": 726, "skin": "common/btn_green.png", "name": "BOTTOM_RIGHT" } }, { "type": "Button", "props": { "y": 574, "skin": "common/btn_green.png", "name": "BOTTOM_LEFT" } }] }] };
+            MainViewUI.uiView = { "type": "View", "props": { "width": 960, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 960, "skin": "common/icon_frame.png", "sizeGrid": "14,17,20,14", "name": "BACK_GROUND", "height": 640 } }, { "type": "Box", "props": { "y": -3, "x": -3 }, "child": [{ "type": "Button", "props": { "y": 298, "x": 360, "skin": "common/btn_green.png", "name": "CENTER" } }, { "type": "Button", "props": { "y": 6, "x": 3, "skin": "common/btn_green.png", "name": "TOP_LEFT" } }, { "type": "Button", "props": { "y": 7, "x": 721, "skin": "common/btn_green.png", "name": "TOP_RIGHT" } }, { "type": "Button", "props": { "y": 570, "x": 721, "skin": "common/btn_green.png", "name": "BOTTOM_RIGHT" } }, { "type": "Button", "props": { "y": 570, "x": 6, "skin": "common/btn_green.png", "name": "BOTTOM_LEFT" } }] }] };
             pluginLogin.MainViewUI = MainViewUI;
         })(pluginLogin = plugins.pluginLogin || (plugins.pluginLogin = {}));
     })(plugins = ui.plugins || (ui.plugins = {}));

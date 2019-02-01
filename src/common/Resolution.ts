@@ -48,34 +48,49 @@ module plugin {
                 // Laya.stage.x += blackRealWidth/2/unit;
                 Resolution.diffWidth = blackRealWidth / 2 / unit;
             }
+
+            
         }
 
-        public recurate(node: Laya.Component){
+        public recurate(node: Laya.Sprite){
+            let iphoneX = false;
+            if (Laya.Browser.clientWidth / Laya.Browser.clientHeight > 2) {
+                // iphone x
+                iphoneX = true;
+            }
             let count = node.numChildren;
             for (var index = 0; index < count; index++) {
-                let child = node.getChildAt(index) as Laya.Component;
+                let child = node.getChildAt(index) as Laya.Sprite;
                 if(child.name == "TOP_LEFT"){
                     child.x -= Resolution.diffWidth;
                     child.y -= Resolution.diffHight;
+                    if(iphoneX){
+                        child.x += 70;
+                    }
                 }else if(child.name == "TOP_RIGHT"){
                     child.x += Resolution.diffWidth;
                     child.y -= Resolution.diffHight;
                 }else if(child.name == "BOTTOM_LEFT"){
                     child.x -= Resolution.diffWidth;
                     child.y += Resolution.diffHight;
+                    if(iphoneX){
+                        child.x += 70;
+                    }
                 }else if(child.name == "BOTTOM_RIGHT"){
                     child.x += Resolution.diffWidth;
                     child.y += Resolution.diffHight;
                 }
-                child.mouseEnabled = true;
-                child.mouseThrough = true;
+                if (child instanceof laya.ui.Box) {
+                    child.mouseEnabled = true;
+                    child.mouseThrough = true;
+                }
                 this.recurate(child);
                 
             }
 
         }
 
-        public setResolutionNode(node: Laya.Component) {
+        public setResolutionNode(node: Laya.Sprite) {
             let self = this;
             node.x += Resolution.diffWidth;
             node.y += Resolution.diffHight
@@ -86,6 +101,8 @@ module plugin {
                 bg.width += 2* Resolution.diffWidth;
                 bg.height += 2* Resolution.diffHight;
             }
+            //View/Box等容器需要将以下两个开关打开,否则处于其外边的按钮无法点击
+            node.mouseThrough = true;
 
             this.recurate(node);
             Laya.stage.addChild(node);

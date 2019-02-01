@@ -4,9 +4,6 @@ module plugin{
         constructor(){
             super()
             this._mainView = new ui.plugins.pluginLogin.MainViewUI();
- 
-
-
             plugin.Resolution.getInstance().setResolutionNode(this._mainView)
             
         }

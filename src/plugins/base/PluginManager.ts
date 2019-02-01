@@ -26,31 +26,39 @@ module plugin{
             if(this._pluginCache.hasOwnProperty(pluginName)){
                 aPlugin = this._pluginCache[pluginName]
             }
+            let firstLoad = false;
             if (aPlugin == undefined){
                 aPlugin = new pluginClass();
                 aPlugin.setName(pluginName);
                 this._pluginCache[pluginName] = aPlugin;
+                firstLoad = true;
             }
             if(this._curPlugin){
                 this._curPlugin.onStop();
             }
             this._curPlugin = aPlugin;
             this._pluginStack.push(pluginName);
-            aPlugin.onActive();
-            aPlugin.onShow(...args);
+            if (firstLoad){
+                let resources = this._curPlugin.dependencyResources();
+                console.log("加载资源...")
+                console.log(resources)
+                Laya.loader.load(resources,Laya.Handler.create(this, function(){
+                    console.log("资源加载完毕")
+                    let view = aPlugin.loadView();
+                    aPlugin.setView(view);
+                    aPlugin.onShow(...args);
+                }),null,Laya.Loader.ATLAS,1,true);
+            }else{
+                aPlugin.onShow(...args);
+            }
         }
+ 
 
         //弹出一个插件
         public popPlugin():void{
             let pluginName = this._pluginStack.pop();
             let aPlugin = this._pluginCache[pluginName];
             aPlugin.onHide();
-            aPlugin.onStop();
-            let preName = this._pluginStack[this._pluginStack.length - 1];
-            let prePlugin = this._pluginCache[preName];
-            if (prePlugin != undefined){
-                prePlugin.onActive();
-            }
         }
 
         //销毁某个插件

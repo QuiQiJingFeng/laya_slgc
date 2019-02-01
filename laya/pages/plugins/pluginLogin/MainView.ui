@@ -2,7 +2,7 @@
     "x":0,
     "type":"View",
     "selectedBox":1,
-    "selecteID":3,
+    "selecteID":10,
     "props":{"width":960,"sceneColor":"#000000","height":640},
     "nodeParent":-1,
     "label":"View",
@@ -27,14 +27,14 @@
         },
         {
             "x":15,
-            "type":"Clip",
-            "props":{"y":259,"x":423,"var":"clip","skin":"resource/common/sprite-136-0.png","interval":10,"clipY":6,"clipX":7,"autoPlay":false},
+            "type":"ProgressBar",
+            "props":{"y":551,"x":78,"width":820,"var":"lodingBar","skin":"resource/common/progress.png","sizeGrid":"5,10,11,10"},
             "nodeParent":1,
-            "label":"Clip(clip)",
+            "label":"ProgressBar(lodingBar)",
             "isDirectory":false,
             "isAniNode":true,
             "hasChild":false,
-            "compId":3,
+            "compId":10,
             "child":[
                 ]
         }],

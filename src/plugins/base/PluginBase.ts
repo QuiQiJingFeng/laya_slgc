@@ -2,9 +2,20 @@ module plugin{
     export class PluginBase {
         private _pluginName:string;
         private _mainView:Laya.View;
-        constructor(mainView:Laya.View){
-            game.Resolution.getInstance().setResolutionNode(mainView);
+        constructor(){
+        }
+        //必须实现这个方法
+        loadView?(): Laya.View;
+
+        dependencyResources?():[string];
+
+        getView():Laya.View{
+            return this._mainView;
+        }
+
+        setView(mainView:Laya.View){
             this._mainView = mainView;
+            game.Resolution.getInstance().setResolutionNode(mainView);
         }
 
         setName(pluginName):void{
@@ -20,7 +31,7 @@ module plugin{
         }
 
         //插件被显示
-        onShow(...args: any[]):void{
+        onShow():void{
             
         }
         //插件被隐藏

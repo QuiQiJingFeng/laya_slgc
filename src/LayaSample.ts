@@ -8,14 +8,12 @@ class GameMain{
         Laya.init(960,640, WebGL);
         this.initSuccess = false;
         let resuorces = [
-			"./res/atlas/activity.atlas",
-			"./res/atlas/common.atlas",
-			"./res/atlas/comp.atlas",
+			"./res/atlas/resource/common.atlas",
 		]
         Laya.stage.bgColor = "#ABCDEF";
         game.Resolution.getInstance().setResoulution();
 		Laya.loader.load(resuorces,Laya.Handler.create(this, this.onLoaded),Laya.Handler.create(this, this.onLoading));
-        
+ 
     }
 
     private onLoading(number):void{

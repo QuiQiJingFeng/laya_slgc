@@ -1,7 +1,7 @@
 module plugin{
     export class PluginLogin extends plugin.PluginBase {
         constructor(){
-            super(new ui.plugins.pluginLogin.MainViewUI())
+            super(new view.plugins.pluginLogin.MainView())
         }
 
         onShow():void{

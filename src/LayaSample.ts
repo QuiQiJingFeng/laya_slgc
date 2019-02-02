@@ -9,7 +9,7 @@ class GameMain{
  
         Laya.stage.bgColor = "#ABCDEF";
         game.Resolution.getInstance().setResoulution();
-		plugin.PluginManager.getInstance().pushPlugin("PLUGIN_LOGIN");
+		plugin.PluginManager.getInstance().pushPlugin("PLUGIN_UPDATE");
     }
 
  

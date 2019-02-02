@@ -54190,16 +54190,16 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var plugin;
 (function (plugin) {
-    var PluginLogin = (function (_super) {
-        __extends(PluginLogin, _super);
-        function PluginLogin() {
-            return _super.call(this, new ui.plugins.pluginLogin.MainViewUI()) || this;
+    var PluginUpdate = (function (_super) {
+        __extends(PluginUpdate, _super);
+        function PluginUpdate() {
+            return _super.call(this, new ui.plugins.PluginUpdate.MainViewUI()) || this;
         }
-        PluginLogin.prototype.onShow = function () {
+        PluginUpdate.prototype.onShow = function () {
         };
-        return PluginLogin;
+        return PluginUpdate;
     }(plugin.PluginBase));
-    plugin.PluginLogin = PluginLogin;
+    plugin.PluginUpdate = PluginUpdate;
 })(plugin || (plugin = {}));
 //# sourceMappingURL=main.js.map
 var plugin;
@@ -54209,7 +54209,7 @@ var plugin;
         }
         return PluginConfig;
     }());
-    PluginConfig.PLUGIN_LOGIN = plugin.PluginLogin;
+    PluginConfig.PLUGIN_LOGIN = plugin.PluginUpdate;
     plugin.PluginConfig = PluginConfig;
 })(plugin || (plugin = {}));
 //# sourceMappingURL=PluginConfig.js.map
@@ -54224,8 +54224,8 @@ var ui;
 (function (ui) {
     var plugins;
     (function (plugins) {
-        var pluginLogin;
-        (function (pluginLogin) {
+        var PluginUpdate;
+        (function (PluginUpdate) {
             var MainViewUI = (function (_super) {
                 __extends(MainViewUI, _super);
                 function MainViewUI() {
@@ -54233,13 +54233,13 @@ var ui;
                 }
                 MainViewUI.prototype.createChildren = function () {
                     _super.prototype.createChildren.call(this);
-                    this.createView(ui.plugins.pluginLogin.MainViewUI.uiView);
+                    this.createView(ui.plugins.PluginUpdate.MainViewUI.uiView);
                 };
                 return MainViewUI;
             }(View));
             MainViewUI.uiView = { "type": "View", "props": { "width": 960, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 960, "skin": "common/icon_frame.png", "sizeGrid": "14,17,20,14", "name": "BACK_GROUND", "height": 640 } }, { "type": "Box", "props": { "y": -3, "x": -3 }, "child": [{ "type": "Button", "props": { "y": 567, "x": 0, "skin": "common/btn_green.png", "layoutY": "BOTTOM", "layoutX": "LEFT" } }, { "type": "Button", "props": { "y": 308, "x": 370, "skin": "common/btn_green.png" } }, { "type": "Button", "props": { "y": 567, "x": 720, "skin": "common/btn_green.png", "layoutY": "BOTTOM", "layoutX": "RIGHT" } }, { "type": "Button", "props": { "y": 0, "x": 720, "skin": "common/btn_green.png", "layoutY": "TOP", "layoutX": "RIGHT" } }, { "type": "Button", "props": { "y": 0, "x": 0, "skin": "common/btn_green.png", "layoutY": "TOP", "layoutX": "LEFT" } }, { "type": "Button", "props": { "y": 308, "x": 0, "skin": "common/btn_green.png", "layoutX": "LEFT" } }, { "type": "Button", "props": { "y": 308, "x": 720, "skin": "common/btn_green.png", "layoutX": "RIGHT" } }, { "type": "Button", "props": { "y": 567, "x": 370, "skin": "common/btn_green.png", "layoutY": "BOTTOM" } }, { "type": "Button", "props": { "y": 0, "x": 370, "skin": "common/btn_green.png", "layoutY": "TOP" } }] }] };
-            pluginLogin.MainViewUI = MainViewUI;
-        })(pluginLogin = plugins.pluginLogin || (plugins.pluginLogin = {}));
+            PluginUpdate.MainViewUI = MainViewUI;
+        })(PluginUpdate = plugins.PluginUpdate || (plugins.PluginUpdate = {}));
     })(plugins = ui.plugins || (ui.plugins = {}));
 })(ui || (ui = {}));
 //# sourceMappingURL=layaUI.max.all.js.map

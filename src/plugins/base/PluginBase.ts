@@ -1,7 +1,7 @@
 module plugin{
     export class PluginBase {
-        private _pluginName:string;
-        private _mainView:Laya.View;
+        protected _pluginName:string;
+        protected _mainView:Laya.View;
         constructor(){
         }
         //必须实现这个方法

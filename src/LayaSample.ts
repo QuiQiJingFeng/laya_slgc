@@ -7,9 +7,10 @@ class GameMain{
         Laya.MiniAdpter.init();
         Laya.init(960,640, WebGL);
  
-        Laya.stage.bgColor = "#ABCDEF";
-        game.Resolution.getInstance().setResoulution();
-		plugin.PluginManager.getInstance().pushPlugin("PLUGIN_UPDATE");
+        Laya.loader.load(["res/atlas/resource/common.atlas"], laya.utils.Handler.create(this, function(){
+            AppFacade.getInstance().startUp(Laya.stage);
+        }));
+        
     }
 
  

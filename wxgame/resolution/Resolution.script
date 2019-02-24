@@ -1,0 +1,5 @@
+<Resolution className="game.Resolution">
+	<prop name="layoutX" tips="X方向适配" type="option" option="LEFT,RIGHT"/>
+    <prop name="layoutY" tips="Y方向适配" type="option" option="TOP,BOTTOM"/>
+    <prop name="layoutBg" tips="是否拉伸底背景" type="bool"/>
+</Resolution>

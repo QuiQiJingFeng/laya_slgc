@@ -41,32 +41,22 @@
 	<!-- 物理引擎matter.js -->
 	<!--用户自定义顺序文件添加到这里-->
 	<!--jsfile--Custom-->
-	
-	<!-- PUREMVC 框架 -->
-	<script type="text/javascript" src="js/puremvc/puremvc-1.0.1.min.js"></script> 
-	<!-- 注意:报ui not defined的原因是 js/ui/layaUI.max.all.js 这个文件没有加载的时候就调用了ui的方法-->
-	<script src="js/ui/layaUI.max.all.js"></script>
-
-	
 	<!--jsfile--Custom-->
 	<!--自定义的js(src文件夹下)文件自动添加到下面jsfile模块标签里面里-->
 	<!--删除标签，ide不会自动添加js文件，请谨慎操作-->
 	<!--jsfile--startTag-->
-	<script src="js/game/AppEvent.js"></script>
-	<script src="js/game/AppFaced.js"></script>
-	<script src="js/game/controller/boostraps/BootstrapCommands.js"></script>
-	<script src="js/game/controller/boostraps/BootstrapModels.js"></script>
-	<script src="js/game/controller/boostraps/BootstrapViewMediators.js"></script>
-	<script src="js/game/controller/commands/CommandTest.js"></script>
-	<script src="js/game/controller/StartupCommand.js"></script>
-	<script src="js/game/model/DataProxy.js"></script>
-	<script src="js/game/view/ApplicationMediator.js"></script>
-	<script src="js/game/view/component/testViewMediator.js"></script>
+	<script src="js/common/ResolutionConfig.js"></script>
+	<script src="js/common/Resolution.js"></script>
+	<script src="js/common/Map.js"></script>
+	<script src="js/common/UIManager.js"></script>
+	<script src="js/ui/layaUI.max.all.js"></script>
+	<script src="js/view/game/GameStartView.js"></script>
+	<script src="js/view/update/UpdateView.js"></script>
 	<!--jsfile--endTag-->
 
 	<!--启动类添加到这里-->
 	<!--jsfile--Main-->
-	<script src="js/LayaSample.js"></script>
+	<script src="js/main.js"></script>
 	<!--jsfile--Main-->
 </body>
 

@@ -53961,28 +53961,19 @@ if (typeof define === 'function' && define.amd){
         }
     });
 }
-var game;
-(function (game) {
-    var Resolution = (function () {
-        function Resolution() {
+var resolution;
+(function (resolution) {
+    var ResolutionConfig = /** @class */ (function () {
+        function ResolutionConfig() {
         }
-        Resolution.getInstance = function () {
-            if (Resolution.__instance == undefined) {
-                Resolution.__instance = new Resolution();
+        ResolutionConfig.getInstance = function () {
+            if (ResolutionConfig.__instance == undefined) {
+                ResolutionConfig.__instance = new ResolutionConfig();
             }
-            return Resolution.__instance;
+            return ResolutionConfig.__instance;
         };
-        Resolution.prototype.setResoulution = function () {
-            Laya.stage.screenMode = "horizontal";
-            var autoscale = "fixedwidth";
-            //如果先达到Width
-            if (Laya.Browser.width / Laya.stage.width <= Laya.Browser.height / Laya.stage.height) {
-                autoscale = "fixedwidth";
-            }
-            else {
-                autoscale = "fixedheight";
-            }
-            Laya.stage.scaleMode = autoscale;
+        ResolutionConfig.prototype.setResoulution = function () {
+            var autoscale = Laya.stage.scaleMode;
             if (autoscale == "fixedwidth") {
                 //适应宽度，此时舞台宽度跟浏览器宽度是等价的
                 //1个坐标单位 等价于多少个物理像素
@@ -53992,7 +53983,7 @@ var game;
                 //黑边暂用的物理像素的个数
                 var blackRealHeight = Laya.Browser.clientHeight - realHeight;
                 // Laya.stage.y += blackRealHeight/2/unit;
-                Resolution.diffHight = blackRealHeight / 2 / unit;
+                ResolutionConfig.diffHight = blackRealHeight / 2 / unit;
             }
             else if (autoscale == "fixedheight") {
                 //适应宽度，此时舞台宽度跟浏览器宽度是等价的
@@ -54003,270 +53994,635 @@ var game;
                 //黑边暂用的物理像素的个数
                 var blackRealWidth = Laya.Browser.clientWidth - realWidth;
                 // Laya.stage.x += blackRealWidth/2/unit;
-                Resolution.diffWidth = blackRealWidth / 2 / unit;
+                ResolutionConfig.diffWidth = blackRealWidth / 2 / unit;
             }
         };
-        Resolution.prototype.recurate = function (node) {
+        ResolutionConfig.__instance = undefined;
+        //左偏移量
+        ResolutionConfig.diffWidth = 0;
+        //右偏移量
+        ResolutionConfig.diffHight = 0;
+        return ResolutionConfig;
+    }());
+    resolution.ResolutionConfig = ResolutionConfig;
+})(resolution || (resolution = {}));
+//# sourceMappingURL=ResolutionConfig.js.map
+var resolution;
+(function (resolution) {
+    /*
+    附加脚本对应的逻辑类
+    */
+    var Resolution = /** @class */ (function () {
+        function Resolution() {
+            /**是否拉伸背景**/
+            this.layoutWidth = false;
+            this.layoutHeight = false;
             var iphoneX = false;
             if (Laya.Browser.clientWidth / Laya.Browser.clientHeight > 2) {
                 // iphone x
                 iphoneX = true;
             }
-            var count = node.numChildren;
-            for (var index = 0; index < count; index++) {
-                var child = node.getChildAt(index);
-                if (child.hasOwnProperty("layoutX")) {
-                    if (child["layoutX"] == "LEFT") {
-                        child.x -= Resolution.diffWidth;
-                        if (iphoneX) {
-                            child.x += 70;
-                        }
-                    }
-                    else if (child["layoutX"] == "RIGHT") {
-                        child.x += Resolution.diffWidth;
+            if (this.layoutX) {
+                if (this.layoutX == "LEFT") {
+                    this.node.x -= resolution.ResolutionConfig.diffWidth;
+                    if (iphoneX) {
+                        this.node.x += 70;
                     }
                 }
-                if (child.hasOwnProperty("layoutY")) {
-                    if (child["layoutY"] == "TOP") {
-                        child.y -= Resolution.diffHight;
-                    }
-                    else if (child["layoutY"] == "BOTTOM") {
-                        child.y += Resolution.diffHight;
-                    }
+                else if (this.layoutX == "RIGHT") {
+                    this.node.x += resolution.ResolutionConfig.diffWidth;
                 }
+            }
+            if (this.layoutY) {
+                if (this.layoutY == "TOP") {
+                    this.node.y -= resolution.ResolutionConfig.diffHight;
+                }
+                else if (this.layoutY == "BOTTOM") {
+                    this.node.y += resolution.ResolutionConfig.diffHight;
+                }
+            }
+            var unitWidth = resolution.ResolutionConfig.diffWidth;
+            var unitHeight = resolution.ResolutionConfig.diffHight;
+            if (this.layoutWidth) {
+                this.node.width += 2 * unitWidth;
+            }
+            if (this.layoutHeight) {
+                this.node.height += 2 * unitHeight;
+            }
+        }
+        return Resolution;
+    }());
+    resolution.Resolution = Resolution;
+})(resolution || (resolution = {}));
+//# sourceMappingURL=Resolution.js.map
+var util;
+(function (util) {
+    /**
+     * HashMap
+     * key不能是object，否则会出问题
+     */
+    var HashMap = /** @class */ (function () {
+        function HashMap() {
+            this.len = 0;
+            this.obj = new Object();
+        }
+        HashMap.prototype.isEmpty = function () {
+            return this.len == 0;
+        };
+        HashMap.prototype.containsKey = function (key) {
+            return (key in this.obj);
+        };
+        HashMap.prototype.get = function (key) {
+            return this.containsKey(key) ? this.obj[key] : null;
+        };
+        HashMap.prototype.put = function (key, value) {
+            if (!this.containsKey(key)) {
+                this.len++;
+            }
+            this.obj[key] = value;
+            return this;
+        };
+        HashMap.prototype.delete = function (key) {
+            if (this.containsKey(key) && (delete this.obj[key])) {
+                this.len--;
+                return true;
+            }
+            return false;
+        };
+        HashMap.prototype.clear = function () {
+            this.len = 0;
+            this.obj = new Object();
+        };
+        HashMap.prototype.forEach = function (callbackfn) {
+            var keys = this.keySet();
+            for (var i = 0; i < this.len; i++) {
+                var key = keys[i];
+                callbackfn(key, this.obj[key], this);
+            }
+        };
+        HashMap.prototype.keySet = function () {
+            var keys = new Array();
+            for (var key in this.obj) {
+                keys.push(key);
+            }
+            return keys;
+        };
+        HashMap.prototype.valueList = function () {
+            var values = new Array();
+            for (var key in this.obj) {
+                values.push(this.obj[key]);
+            }
+            return values;
+        };
+        HashMap.prototype.keys = function () {
+            return new MapIterator(this.keySet());
+        };
+        HashMap.prototype.values = function () {
+            return new MapIterator(this.valueList());
+        };
+        HashMap.prototype.size = function () {
+            return this.len;
+        };
+        return HashMap;
+    }());
+    util.HashMap = HashMap;
+    /**
+     *  OrderedMap
+     */
+    var OrderedMap = /** @class */ (function () {
+        function OrderedMap() {
+            this.keyEles = [];
+            this.elements = [];
+        }
+        OrderedMap.prototype.isEmpty = function () {
+            return this.keyEles.length == 0;
+        };
+        OrderedMap.prototype.containsKey = function (key) {
+            for (var i = 0; i < this.keyEles.length; i++) {
+                if (this.keyEles[i] == key) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        OrderedMap.prototype.get = function (key) {
+            for (var i = 0; i < this.keyEles.length; i++) {
+                if (this.keyEles[i] == key) {
+                    return this.elements[i];
+                }
+            }
+            return null;
+        };
+        OrderedMap.prototype.put = function (key, value) {
+            for (var i = 0; i < this.keyEles.length; i++) {
+                if (this.keyEles[i] == key) {
+                    this.elements[i] = value;
+                    return this;
+                }
+            }
+            this.keyEles.push(key);
+            this.elements.push(value);
+            return this;
+        };
+        OrderedMap.prototype.delete = function (key) {
+            for (var i = 0; i < this.keyEles.length; i++) {
+                if (this.keyEles[i] == key) {
+                    this.keyEles.splice(i, 1);
+                    this.elements.splice(i, 1);
+                    return true;
+                }
+            }
+            return false;
+        };
+        OrderedMap.prototype.clear = function () {
+            this.elements = [];
+            this.keyEles = [];
+        };
+        OrderedMap.prototype.forEach = function (callbackfn) {
+            for (var i = 0; i < this.keyEles.length; i++) {
+                callbackfn(this.keyEles[i], this.elements[i], this);
+            }
+        };
+        OrderedMap.prototype.keys = function () {
+            return new MapIterator(this.keyEles);
+        };
+        OrderedMap.prototype.values = function () {
+            return new MapIterator(this.elements);
+        };
+        OrderedMap.prototype.size = function () {
+            return this.keyEles.length;
+        };
+        return OrderedMap;
+    }());
+    util.OrderedMap = OrderedMap;
+    var MapIterator = /** @class */ (function () {
+        function MapIterator(e) {
+            this.elements = e;
+            this.ps = 0;
+        }
+        MapIterator.prototype.next = function () {
+            if (this.ps >= this.elements.length) {
+                return {
+                    value: undefined,
+                    done: true
+                };
+            }
+            this.ps++;
+            return {
+                value: this.elements[this.ps - 1],
+                done: false
+            };
+        };
+        MapIterator.prototype.dataArray = function () {
+            return this.elements;
+        };
+        return MapIterator;
+    }());
+    util.MapIterator = MapIterator;
+})(util || (util = {}));
+//# sourceMappingURL=Map.js.map
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var UIManagerInternal;
+(function (UIManagerInternal) {
+    var _a;
+    /**
+     * ui管理类，通过名字管理界面
+    */
+    var UIManager = /** @class */ (function () {
+        function UIManager() {
+            this.gameUIs = new util.OrderedMap();
+        }
+        UIManager.getInstance = function () {
+            if (UIManager.uimanager == null) {
+                UIManager.uimanager = new UIManager();
+            }
+            return UIManager.uimanager;
+        };
+        /**
+         * 得到已存在的ui
+         */
+        UIManager.prototype.GetUI = function (TClass) {
+            if (TClass.prototype.___UIManager_CLASS_ID == undefined)
+                return null;
+            return this.gameUIs.get(TClass.prototype.___UIManager_CLASS_ID);
+        };
+        UIManager.prototype.RecurateBox = function (node) {
+            for (var i = 0; i < node.numChildren; i++) {
+                var child = node.getChildAt(i);
                 if (child instanceof laya.ui.Box) {
                     child.mouseEnabled = true;
                     child.mouseThrough = true;
+                    // console.log(`set box: name=${child.name}`);
+                    this.RecurateBox(child);
                 }
-                this.recurate(child);
             }
         };
-        Resolution.prototype.setResolutionNode = function (node) {
-            var self = this;
-            node.x += Resolution.diffWidth;
-            node.y += Resolution.diffHight;
-            var bg = node.getChildByName("BACK_GROUND");
-            if (bg) {
-                bg.x -= Resolution.diffWidth;
-                bg.y -= Resolution.diffHight;
-                bg.width += 2 * Resolution.diffWidth;
-                bg.height += 2 * Resolution.diffHight;
-            }
-            //View/Box等容器需要将以下两个开关打开,否则处于其外边的按钮无法点击
-            node.mouseThrough = true;
-            this.recurate(node);
-            Laya.stage.addChild(node);
-        };
-        return Resolution;
-    }());
-    Resolution.__instance = undefined;
-    //左偏移量
-    Resolution.diffWidth = 0;
-    //右偏移量
-    Resolution.diffHight = 0;
-    game.Resolution = Resolution;
-})(game || (game = {}));
-//# sourceMappingURL=Resolution.js.map
-var plugin;
-(function (plugin) {
-    var PluginBase = (function () {
-        function PluginBase(mainView) {
-            game.Resolution.getInstance().setResolutionNode(mainView);
-            this._mainView = mainView;
-        }
-        PluginBase.prototype.setName = function (pluginName) {
-            this._pluginName = pluginName;
-        };
-        PluginBase.prototype.getName = function () {
-            return this._pluginName;
-        };
-        //插件被销毁
-        PluginBase.prototype.onDestroy = function () {
-            this._mainView.destroy(true);
-        };
-        //插件被显示
-        PluginBase.prototype.onShow = function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-        };
-        //插件被隐藏
-        PluginBase.prototype.onHide = function () {
-        };
-        //插件停止 当前插件不是活跃插件了
-        PluginBase.prototype.onStop = function () {
-            this._mainView.visible = false;
-        };
-        //插件被激活
-        PluginBase.prototype.onActive = function () {
-            this._mainView.visible = true;
-        };
-        return PluginBase;
-    }());
-    plugin.PluginBase = PluginBase;
-})(plugin || (plugin = {}));
-//# sourceMappingURL=PluginBase.js.map
-var plugin;
-(function (plugin) {
-    var PluginManager = (function () {
-        function PluginManager() {
-            this._pluginCache = {};
-            this._pluginStack = new Array();
-        }
-        PluginManager.getInstance = function () {
-            if (PluginManager.__instance == undefined) {
-                PluginManager.__instance = new PluginManager();
-            }
-            return PluginManager.__instance;
-        };
-        //压入一个插件
-        PluginManager.prototype.pushPlugin = function (pluginName) {
+        /**
+         * 显示指定UI，如果不存在，将被创建。
+         *
+         * args 仅对实现了接口IUIManagerSupport的界面有效，每次Show，会调用 ui.OnShow(args)
+         */
+        UIManager.prototype.Show = function (TClass) {
             var args = [];
             for (var _i = 1; _i < arguments.length; _i++) {
                 args[_i - 1] = arguments[_i];
             }
-            var pluginClass = plugin.PluginConfig[pluginName];
-            if (pluginClass == undefined) {
-                throw new Error("pluginName:not exist=>" + pluginName);
+            if (TClass.prototype.___UIManager_CLASS_ID == undefined) {
+                TClass.prototype.___UIManager_CLASS_ID = UIManager.GLOBAL_UI_ID++;
             }
-            var aPlugin = undefined;
-            if (this._pluginCache.hasOwnProperty(pluginName)) {
-                aPlugin = this._pluginCache[pluginName];
+            if (TClass.prototype.GetUILayer == undefined) {
+                TClass.prototype.GetUILayer = function () { return UIManager.LAYER_NORMAL; };
             }
-            if (aPlugin == undefined) {
-                aPlugin = new pluginClass();
-                aPlugin.setName(pluginName);
-                this._pluginCache[pluginName] = aPlugin;
+            if (TClass.prototype.NeedBlackMask == undefined) {
+                TClass.prototype.NeedBlackMask = function () { return false; };
             }
-            if (this._curPlugin) {
-                this._curPlugin.onStop();
+            if (TClass.prototype.CloseWhenClickMask == undefined) {
+                TClass.prototype.CloseWhenClickMask = function () { return { close: true, destroy: true }; };
             }
-            this._curPlugin = aPlugin;
-            this._pluginStack.push(pluginName);
-            aPlugin.onActive();
-            aPlugin.onShow.apply(aPlugin, args);
+            if (TClass.prototype.IsDestoryWhenDestoryAll == undefined) {
+                TClass.prototype.IsDestoryWhenDestoryAll = function () { return true; };
+            }
+            var key = TClass.prototype.___UIManager_CLASS_ID;
+            // let ctor: { new (): any } = TClass;
+            var ui = this.gameUIs.get(key);
+            if (ui == null) {
+                ui = new TClass();
+                if (!(ui instanceof Laya.View))
+                    throw new Error("!(ui instanceof Laya.View):" + ui.constructor.name);
+                Laya.stage.addChild(ui);
+                this.RecurateBox(ui);
+                // 自动添加蒙版
+                // TODO:是否能够复用蒙版？但是得考虑到多个界面叠加显示时，蒙版得有多个。
+                var internalView_1 = ui;
+                if (internalView_1.NeedBlackMask()) {
+                    var Mask_Name = "dlg_mask";
+                    var maskUI = internalView_1.getChildByName(Mask_Name);
+                    if (maskUI != null) {
+                        console.log("自动创建Mask出错, UI不能有名字为dlg_mask的控件");
+                    }
+                    else {
+                        var img = new Laya.Image("update/blackMask.png");
+                        img.name = Mask_Name;
+                        img.alpha = 0.7;
+                        img.anchorX = 0;
+                        img.anchorY = 0;
+                        img.x = -ui.width;
+                        img.y = -ui.height;
+                        img.size(ui.width * 3, ui.height * 3);
+                        img.mouseEnabled = true;
+                        img.mouseThrough = false;
+                        internalView_1.addChild(img);
+                        internalView_1.setChildIndex(internalView_1.getChildAt(internalView_1.numChildren - 1), 0);
+                        maskUI = img;
+                    }
+                    var config_1 = internalView_1.CloseWhenClickMask();
+                    if (config_1.close) {
+                        // 单击关闭这个界面
+                        maskUI.on(Laya.Event.CLICK, maskUI, function () { UIManager.getInstance().Hide(TClass, config_1.destroy); });
+                    }
+                }
+            }
+            else if (!ui.visible) {
+                if (!(ui instanceof Laya.View))
+                    throw new Error("!(ui instanceof Laya.View):" + ui.prototype.constructor.name);
+                Laya.stage.addChild(ui);
+                ui.visible = true;
+            }
+            // show的界面在最上边
+            this.gameUIs.delete(key);
+            this.gameUIs.put(key, ui);
+            var _loop_1 = function (layer) {
+                var layer_UIs = this_1.gameUIs.values().dataArray().filter(function (n) { return n.GetUILayer() == layer; });
+                if (layer_UIs.length >= 100)
+                    console.error("============================================UIManager Layer OverFlow============================================");
+                var startOrder = UIManager.LAYER_ORDER[layer];
+                for (var i = 0; i < layer_UIs.length; i++) {
+                    layer_UIs[i].zOrder = i + startOrder;
+                }
+            };
+            var this_1 = this;
+            // 根据Layer设置zOrder
+            for (var layer = UIManager.LAYER_START; layer <= UIManager.LAYER_MAX; layer++) {
+                _loop_1(layer);
+            }
+            // 若实现了内置的一些回调
+            var internalView = ui;
+            if ("OnShow" in internalView) {
+                internalView.OnShow.apply(internalView, args);
+            }
+            Laya.stage.updateZOrder();
+            return ui;
         };
-        //弹出一个插件
-        PluginManager.prototype.popPlugin = function () {
-            var pluginName = this._pluginStack.pop();
-            var aPlugin = this._pluginCache[pluginName];
-            aPlugin.onHide();
-            aPlugin.onStop();
-            var preName = this._pluginStack[this._pluginStack.length - 1];
-            var prePlugin = this._pluginCache[preName];
-            if (prePlugin != undefined) {
-                prePlugin.onActive();
+        /**
+         * 指定UI是否可见
+         */
+        UIManager.prototype.GetIsShowing = function (TClass) {
+            var view = this.GetUI(TClass);
+            return view != null && view.visible;
+        };
+        /**
+         * 隐藏UI
+         * @param destroy: 是否销毁
+         */
+        UIManager.prototype.Hide = function (TClass, destroy) {
+            if (destroy === void 0) { destroy = false; }
+            var view = this.GetUI(TClass);
+            if (view == null) {
+                console.error("HideUI Failed: " + TClass.prototype.constructor.name);
+                return;
+            }
+            else {
+                if (destroy)
+                    this.Destroy(TClass);
+                else {
+                    if (view.OnHide != undefined) {
+                        view.OnHide();
+                    }
+                    view.visible = false;
+                    view.removeSelf();
+                }
             }
         };
-        //销毁某个插件
-        PluginManager.prototype.destroyPlugin = function (pluginName) {
-            var aPlugin = this._pluginCache[pluginName];
-            aPlugin.onDestroy();
-            this._pluginCache[pluginName] = undefined;
-        };
-        //销毁所有的插件
-        PluginManager.prototype.destroyAllPlugins = function () {
-            for (var key in this._pluginCache) {
-                var aPlugin = this._pluginCache[key];
-                aPlugin.onDestroy();
+        /**
+         * 彻底销毁UI，ui尽量不要销毁
+         */
+        UIManager.prototype.Destroy = function (TClass) {
+            var key = TClass.prototype.___UIManager_CLASS_ID;
+            if (key == undefined) {
+                // console.error("DestroyUI UnKnownKey " + TClass.prototype.constructor.name);
+                return;
             }
-            this._pluginCache = {};
+            var ui = this.gameUIs.get(key);
+            this.gameUIs.delete(key);
+            if (ui != null) {
+                if (ui.OnHide != undefined) {
+                    ui.OnHide();
+                }
+                ui.visible = false;
+                ui.removeSelf();
+                ui.destroy();
+            }
         };
-        //清空堆栈记录
-        PluginManager.prototype.clearStack = function () {
-            this._pluginStack = new Array();
+        UIManager.prototype.DestroyAll = function () {
+            var temps = this.gameUIs.values().dataArray();
+            var uis = new Array();
+            uis.push.apply(uis, temps);
+            for (var _i = 0, uis_1 = uis; _i < uis_1.length; _i++) {
+                var temp = uis_1[_i];
+                var ui_1 = temp;
+                if (ui_1 != null) {
+                    if (!ui_1.IsDestoryWhenDestoryAll())
+                        continue;
+                    this.Destroy(ui_1.constructor);
+                }
+            }
         };
-        return PluginManager;
+        UIManager.GLOBAL_UI_ID = 0;
+        UIManager.LAYER_START = 0;
+        UIManager.LAYER_NORMAL = 0;
+        UIManager.LAYER_OVERLAY = 1;
+        UIManager.LAYER_OVERLAY_1 = 2;
+        UIManager.LAYER_MAX = 2;
+        UIManager.LAYER_ORDER = (_a = {},
+            _a[UIManager.LAYER_NORMAL] = 0,
+            _a[UIManager.LAYER_OVERLAY] = 100,
+            _a[UIManager.LAYER_OVERLAY_1] = 200,
+            _a);
+        return UIManager;
     }());
-    PluginManager.__instance = undefined;
-    plugin.PluginManager = PluginManager;
-})(plugin || (plugin = {}));
-//# sourceMappingURL=PluginManager.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var plugin;
-(function (plugin) {
-    var PluginUpdate = (function (_super) {
-        __extends(PluginUpdate, _super);
-        function PluginUpdate() {
-            return _super.call(this, new ui.plugins.PluginUpdate.MainViewUI()) || this;
-        }
-        PluginUpdate.prototype.onShow = function () {
-        };
-        return PluginUpdate;
-    }(plugin.PluginBase));
-    plugin.PluginUpdate = PluginUpdate;
-})(plugin || (plugin = {}));
-//# sourceMappingURL=main.js.map
-var plugin;
-(function (plugin) {
-    var PluginConfig = (function () {
-        function PluginConfig() {
-        }
-        return PluginConfig;
-    }());
-    PluginConfig.PLUGIN_LOGIN = plugin.PluginUpdate;
-    plugin.PluginConfig = PluginConfig;
-})(plugin || (plugin = {}));
-//# sourceMappingURL=PluginConfig.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+    UIManagerInternal.UIManager = UIManager;
+})(UIManagerInternal || (UIManagerInternal = {}));
+var UIManager = /** @class */ (function (_super) {
+    __extends(UIManager, _super);
+    function UIManager() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return UIManager;
+}(UIManagerInternal.UIManager));
+//# sourceMappingURL=UIManager.js.map
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var View = laya.ui.View;
 var Dialog = laya.ui.Dialog;
 var ui;
 (function (ui) {
-    var plugins;
-    (function (plugins) {
-        var PluginUpdate;
-        (function (PluginUpdate) {
-            var MainViewUI = (function (_super) {
-                __extends(MainViewUI, _super);
-                function MainViewUI() {
-                    return _super.call(this) || this;
-                }
-                MainViewUI.prototype.createChildren = function () {
-                    _super.prototype.createChildren.call(this);
-                    this.createView(ui.plugins.PluginUpdate.MainViewUI.uiView);
-                };
-                return MainViewUI;
-            }(View));
-            MainViewUI.uiView = { "type": "View", "props": { "width": 960, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 960, "skin": "common/icon_frame.png", "sizeGrid": "14,17,20,14", "name": "BACK_GROUND", "height": 640 } }, { "type": "Box", "props": { "y": -3, "x": -3 }, "child": [{ "type": "Button", "props": { "y": 567, "x": 0, "skin": "common/btn_green.png", "layoutY": "BOTTOM", "layoutX": "LEFT" } }, { "type": "Button", "props": { "y": 308, "x": 370, "skin": "common/btn_green.png" } }, { "type": "Button", "props": { "y": 567, "x": 720, "skin": "common/btn_green.png", "layoutY": "BOTTOM", "layoutX": "RIGHT" } }, { "type": "Button", "props": { "y": 0, "x": 720, "skin": "common/btn_green.png", "layoutY": "TOP", "layoutX": "RIGHT" } }, { "type": "Button", "props": { "y": 0, "x": 0, "skin": "common/btn_green.png", "layoutY": "TOP", "layoutX": "LEFT" } }, { "type": "Button", "props": { "y": 308, "x": 0, "skin": "common/btn_green.png", "layoutX": "LEFT" } }, { "type": "Button", "props": { "y": 308, "x": 720, "skin": "common/btn_green.png", "layoutX": "RIGHT" } }, { "type": "Button", "props": { "y": 567, "x": 370, "skin": "common/btn_green.png", "layoutY": "BOTTOM" } }, { "type": "Button", "props": { "y": 0, "x": 370, "skin": "common/btn_green.png", "layoutY": "TOP" } }] }] };
-            PluginUpdate.MainViewUI = MainViewUI;
-        })(PluginUpdate = plugins.PluginUpdate || (plugins.PluginUpdate = {}));
-    })(plugins = ui.plugins || (ui.plugins = {}));
+    var gameStart;
+    (function (gameStart) {
+        var GameStartViewUI = /** @class */ (function (_super) {
+            __extends(GameStartViewUI, _super);
+            function GameStartViewUI() {
+                return _super.call(this) || this;
+            }
+            GameStartViewUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.gameStart.GameStartViewUI.uiView);
+            };
+            GameStartViewUI.uiView = { "type": "View", "props": { "width": 1136, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 259, "x": 520, "skin": "texture/cbtnAwards1.png" } }, { "type": "Image", "props": { "y": 400, "x": 469, "skin": "texture/cbtnBack1.png" } }, { "type": "Image", "props": { "y": 374, "x": 597, "skin": "texture/cbtnCredits1.png" } }] };
+            return GameStartViewUI;
+        }(View));
+        gameStart.GameStartViewUI = GameStartViewUI;
+    })(gameStart = ui.gameStart || (ui.gameStart = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var update;
+    (function (update) {
+        var UpdateViewUI = /** @class */ (function (_super) {
+            __extends(UpdateViewUI, _super);
+            function UpdateViewUI() {
+                return _super.call(this) || this;
+            }
+            UpdateViewUI.prototype.createChildren = function () {
+                View.regComponent("resolution.Resolution", resolution.Resolution);
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.update.UpdateViewUI.uiView);
+            };
+            UpdateViewUI.uiView = { "type": "View", "props": { "width": 1136, "renderType": "render", "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 1136, "var": "root", "skin": "update/bg.png", "sizeGrid": "1,1,1,1", "height": 640 }, "child": [{ "type": "Script", "props": { "layoutY": "TOP", "layoutX": "LEFT", "layoutWidth": true, "layoutHeight": true, "runtime": "resolution.Resolution" } }] }, { "type": "Image", "props": { "y": 222, "x": 368, "skin": "update/logo.png" } }, { "type": "ProgressBar", "props": { "y": 575, "x": 112, "var": "progressLoad", "skin": "update/progress.png" } }] };
+            return UpdateViewUI;
+        }(View));
+        update.UpdateViewUI = UpdateViewUI;
+    })(update = ui.update || (ui.update = {}));
 })(ui || (ui = {}));
 //# sourceMappingURL=layaUI.max.all.js.map
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**Created by the LayaAirIDE*/
+var view;
+(function (view) {
+    var game;
+    (function (game) {
+        var GameStartView = /** @class */ (function (_super) {
+            __extends(GameStartView, _super);
+            function GameStartView() {
+                return _super.call(this) || this;
+            }
+            GameStartView.prototype.OnShow = function () {
+            };
+            return GameStartView;
+        }(ui.gameStart.GameStartViewUI));
+        game.GameStartView = GameStartView;
+    })(game = view.game || (view.game = {}));
+})(view || (view = {}));
+//# sourceMappingURL=GameStartView.js.map
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**Created by the LayaAirIDE*/
+var view;
+(function (view) {
+    var update;
+    (function (update) {
+        var UpdateView = /** @class */ (function (_super) {
+            __extends(UpdateView, _super);
+            function UpdateView() {
+                var _this = _super.call(this) || this;
+                _this.onLoadRes();
+                return _this;
+            }
+            UpdateView.prototype.onLoadRes = function () {
+                var resources = [
+                    "res/atlas/texture.atlas"
+                ];
+                Laya.loader.load(resources, Laya.Handler.create(this, this.onLoaded), Laya.Handler.create(this, this.onLoading, null, false));
+            };
+            UpdateView.prototype.onLoaded = function () {
+                UIManager.getInstance().Hide(view.update.UpdateView);
+                UIManager.getInstance().Show(view.game.GameStartView);
+            };
+            UpdateView.prototype.onLoading = function (value) {
+                this.progressLoad.value = value;
+            };
+            UpdateView.prototype.OnShow = function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+            };
+            return UpdateView;
+        }(ui.update.UpdateViewUI));
+        update.UpdateView = UpdateView;
+    })(update = view.update || (view.update = {}));
+})(view || (view = {}));
+//# sourceMappingURL=UpdateView.js.map
 var WebGL = Laya.WebGL;
 // 程序入口
-var GameMain = (function () {
+var GameMain = /** @class */ (function () {
     function GameMain() {
+        var DESIGN_RESOLUTION = {
+            width: 1136,
+            height: 640,
+            autoscale: "",
+            screenMode: Laya.Stage.SCREEN_HORIZONTAL,
+        };
         Laya.MiniAdpter.init();
-        Laya.init(960, 640, WebGL);
-        this.initSuccess = false;
-        var resuorces = [
-            "./res/atlas/activity.atlas",
-            "./res/atlas/common.atlas",
-            "./res/atlas/comp.atlas",
-        ];
+        Laya.init(DESIGN_RESOLUTION.width, DESIGN_RESOLUTION.height, WebGL);
         Laya.stage.bgColor = "#ABCDEF";
-        game.Resolution.getInstance().setResoulution();
-        Laya.loader.load(resuorces, Laya.Handler.create(this, this.onLoaded), Laya.Handler.create(this, this.onLoading));
+        //如果先达到Width
+        if (Laya.Browser.width / Laya.stage.width <= Laya.Browser.height / Laya.stage.height) {
+            DESIGN_RESOLUTION.autoscale = "fixedwidth";
+        }
+        else {
+            DESIGN_RESOLUTION.autoscale = "fixedheight";
+        }
+        Laya.stage.scaleMode = DESIGN_RESOLUTION.autoscale;
+        Laya.stage.screenMode = DESIGN_RESOLUTION.screenMode;
+        //UI适配
+        resolution.ResolutionConfig.getInstance().setResoulution();
+        //本地文件
+        Laya.MiniAdpter.nativefiles = [
+            "res/atlas/update.atlas",
+        ];
+        Laya.loader.load(["res/atlas/update.atlas"], laya.utils.Handler.create(this, function () {
+            UIManager.getInstance().Show(view.update.UpdateView);
+            if (Laya.Browser.onMiniGame) {
+                Laya.SoundManager.playMusic("audio/main.mp3", 0);
+            }
+        }));
     }
-    GameMain.prototype.onLoading = function (number) {
-        console.log("加载进度%d", number);
-        //不能放到onLoaded中,比如在浏览器中点击了下刷新
-    };
-    GameMain.prototype.onLoaded = function () {
-        plugin.PluginManager.getInstance().pushPlugin("PLUGIN_LOGIN");
-    };
     return GameMain;
 }());
 new GameMain();
-//# sourceMappingURL=LayaSample.js.map
+//# sourceMappingURL=main.js.map

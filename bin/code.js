@@ -54611,9 +54611,12 @@ var GameMain = /** @class */ (function () {
         Laya.stage.screenMode = DESIGN_RESOLUTION.screenMode;
         //UI适配
         resolution.ResolutionConfig.getInstance().setResoulution();
+        Laya.URL.basePath = "http://192.168.1.101:1111/";
         //本地文件
         Laya.MiniAdpter.nativefiles = [
             "res/atlas/update.atlas",
+            "res/atlas/update.png",
+            "audio/main.mp3",
         ];
         Laya.loader.load(["res/atlas/update.atlas"], laya.utils.Handler.create(this, function () {
             UIManager.getInstance().Show(view.update.UpdateView);

@@ -5,6 +5,10 @@ module resolution {
         static diffWidth: number = 0;
         //右偏移量
         static diffHight: number = 0;
+        //真实的宽度
+        static realWidth:number = 0;
+        //真实的高度
+        static realHeight:number = 0;
         constructor() {
         }
 
@@ -38,7 +42,10 @@ module resolution {
                 var blackRealWidth = Laya.Browser.clientWidth - realWidth;
                 // Laya.stage.x += blackRealWidth/2/unit;
                 ResolutionConfig.diffWidth = blackRealWidth / 2 / unit;
-            }            
+            }    
+
+            ResolutionConfig.realWidth += Laya.stage.width + 2*ResolutionConfig.diffWidth;
+            ResolutionConfig.realHeight += Laya.stage.height + 2*ResolutionConfig.diffHight;        
         }
     }
 }

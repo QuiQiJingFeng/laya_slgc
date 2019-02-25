@@ -25,9 +25,13 @@ class GameMain{
         Laya.stage.screenMode = DESIGN_RESOLUTION.screenMode;
         //UI适配
         resolution.ResolutionConfig.getInstance().setResoulution()
+        if(Laya.Browser.onMiniGame){
+            Laya.URL.basePath = "http://192.168.1.101:1111/"
+        }
         //本地文件
         Laya.MiniAdpter.nativefiles = [
             "res/atlas/update.atlas",
+            "res/atlas/update.png",
             "audio/main.mp3",
         ]
 

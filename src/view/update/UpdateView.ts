@@ -8,7 +8,7 @@ module view.update{
 
 		private onLoadRes():void{
 			let resources = [
-				"res/atlas/texture.atlas"
+				{ url: "res/atlas/texture.atlas"},
 			]
 			Laya.loader.load(resources,Laya.Handler.create(this,this.onLoaded),Laya.Handler.create(this,this.onLoading,null,false));
 		}

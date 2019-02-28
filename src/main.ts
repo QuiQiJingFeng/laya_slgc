@@ -34,8 +34,11 @@ class GameMain{
             "res/atlas/update.png",
             "audio/main.mp3",
         ]
-
-        Laya.loader.load(["res/atlas/update.atlas"], laya.utils.Handler.create(this, function(){
+        let resources = [
+            { url: "res/atlas/update.atlas",type: laya.net.Loader.ATLAS},
+            { url: "audio/main.mp3"}
+        ]
+        Laya.loader.load(resources, laya.utils.Handler.create(this, function(){
             UIManager.getInstance().Show(view.update.UpdateView);
             if(Laya.Browser.onMiniGame){
                 Laya.SoundManager.playMusic("audio/main.mp3",0);

@@ -3,7 +3,7 @@ module view.update{
 	export class UpdateView extends ui.update.UpdateViewUI implements IUIManagerSupport{
 		constructor(){
 			super();
-			this.onLoadRes();
+			
 		}
 
 		private onLoadRes():void{
@@ -23,7 +23,7 @@ module view.update{
 		}
 
 		OnShow?(...args: any[]):void{
-			
+			this.onLoadRes();
 		}
 	}
 }

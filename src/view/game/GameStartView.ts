@@ -3,7 +3,13 @@ module view.game{
 	export class GameStartView extends ui.gameStart.GameStartViewUI implements IUIManagerSupport{
 		constructor(){
 			super();
-			this.initPhysicsWord()
+			// this.initPhysicsWord()
+			this.testBannerAd()
+		}
+
+		testBannerAd():void{
+			wxbridge.BannerAd.createBannerAd("adUnitId",100,100,300)
+			
 		}
 
 		initPhysicsWord():void{

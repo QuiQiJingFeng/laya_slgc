@@ -21,7 +21,7 @@ module ui.update {
 		public root:Laya.Image;
 		public progressLoad:Laya.ProgressBar;
 
-        public static  uiView:any ={"type":"View","props":{"width":1136,"renderType":"render","height":640},"child":[{"type":"Image","props":{"y":0,"x":0,"width":1136,"var":"root","skin":"update/bg.png","sizeGrid":"1,1,1,1","height":640},"child":[{"type":"Script","props":{"layoutY":"TOP","layoutX":"LEFT","layoutWidth":true,"layoutHeight":true,"runtime":"resolution.Resolution"}}]},{"type":"Image","props":{"y":222,"x":368,"skin":"update/logo.png"}},{"type":"ProgressBar","props":{"y":575,"x":112,"var":"progressLoad","skin":"update/progress.png"}}]};
+        public static  uiView:any ={"type":"View","props":{"width":1136,"renderType":"render","height":640},"child":[{"type":"Image","props":{"y":0,"x":0,"width":1136,"var":"root","skin":"update/bg.png","sizeGrid":"1,1,1,1","height":640},"child":[{"type":"Script","props":{"layoutWidth":true,"layoutHeight":true,"runtime":"resolution.Resolution"}}]},{"type":"Image","props":{"y":222,"x":368,"skin":"update/logo.png"}},{"type":"ProgressBar","props":{"y":575,"x":112,"var":"progressLoad","skin":"update/progress.png"}}]};
         constructor(){ super()}
         createChildren():void {
         			View.regComponent("resolution.Resolution",resolution.Resolution);

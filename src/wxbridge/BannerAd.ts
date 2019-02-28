@@ -1,5 +1,5 @@
-module wxbridge{
-	export class BannerAd{
+module wxbridge {
+	export class BannerAd {
 		/*
 			Banner 广告组件的尺寸会根据开发者设置的宽度，
 			即 style.width 进行等比缩放，缩放的范围是 300 到 屏幕宽度。
@@ -7,13 +7,17 @@ module wxbridge{
 			const {screenWidth} = wx.getSystemInfoSync()
 		 */
 		private static _bannerAd = null;
-		public static createBannerAd(adUnitId:string,x:number,y:number,width:number){
-			if(this._bannerAd != null){
+		public static createBannerAd(adUnitId: string, x: number, y: number, width: number) {
+			if(!Laya.Browser.onMiniGame){
+				console.log("没有微信环境")
+				return;
+			}
+			if (this._bannerAd != null) {
 				this._bannerAd.destroy();
 				this._bannerAd = null;
 			}
 			this._bannerAd = Laya.Browser.window.wx.createBannerAd({
-				adUnitId: 'xxxx',
+				adUnitId: adUnitId,
 				style: {
 					left: x,
 					top: y,
@@ -22,11 +26,11 @@ module wxbridge{
 			});
 
 			this._bannerAd.onError(err => {
-				Logger.error("BannerAd=>",err);
+				Logger.error("BannerAd=>", err);
 			});
 			let obj = this._bannerAd.show()
 			obj.catch(err => {
-				Logger.error("BannerAd=>",err);
+				Logger.error("BannerAd=>", err);
 			});
 
 			this._bannerAd.onLoad(() => {
@@ -34,18 +38,18 @@ module wxbridge{
 			})
 
 			obj.then(() => {
-					console.log('banner 广告显示')
+				console.log('banner 广告显示')
 			})
 
 			this._bannerAd.onResize(res => {
 				console.log(res.width, res.height)
 				console.log(this._bannerAd.style.realWidth, this._bannerAd.style.realHeight)
 			})
-				
-			}
 
-		public static hideBanner():void{
-			if(this._bannerAd != null){
+		}
+
+		public static hideBanner(): void {
+			if (this._bannerAd != null) {
 				this._bannerAd.hide()
 			}
 		}

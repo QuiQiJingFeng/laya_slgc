@@ -8,11 +8,21 @@ module resolution {
         /**Y方向适配**/
         public layoutY: string;
         /**是否拉伸背景**/
-        public layoutWidth: boolean = false;
-        public layoutHeight: boolean = false;
+        public layoutWidth: boolean;
+        public layoutHeight: boolean;
         /**定义一个变量来接收Box组件实例**/
         private node: Laya.Sprite;
         constructor() {
+
+        }
+
+        public set owner(value: any) {
+            this.node = value;
+            this.onLoaded()
+        }
+
+
+        private onLoaded(): void {
             let iphoneX = false;
             if (Laya.Browser.clientWidth / Laya.Browser.clientHeight > 2) {
                 // iphone x
@@ -38,10 +48,15 @@ module resolution {
             }
             let unitWidth = ResolutionConfig.diffWidth;
             let unitHeight = ResolutionConfig.diffHight;
+            console.log("this.layoutX = ", this.layoutX)
+            console.log("this.layoutY = ", this.layoutY)
+            console.log("this.layoutWidth = ", this.layoutWidth)
+            console.log("this.layoutHeight = ", this.layoutHeight)
+
             if (this.layoutWidth) {
                 this.node.width += 2 * unitWidth;
             }
-            if(this.layoutHeight){
+            if (this.layoutHeight) {
                 this.node.height += 2 * unitHeight;
             }
         }

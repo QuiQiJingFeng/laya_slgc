@@ -1,8 +1,8 @@
 {
     "x":0,
     "type":"View",
-    "selectedBox":1,
-    "selecteID":17,
+    "selectedBox":8,
+    "selecteID":16,
     "searchKey":"View",
     "referenceLines":[
         {
@@ -37,7 +37,7 @@
                     "x":30,
                     "type":"Script",
                     "source":"laya/pages/resolution/Resolution.script",
-                    "props":{"layoutY":"TOP","layoutX":"LEFT","layoutWidth":true,"layoutHeight":true},
+                    "props":{"layoutWidth":true,"layoutHeight":true},
                     "nodeParent":8,
                     "label":"Resolution",
                     "isDirectory":false,

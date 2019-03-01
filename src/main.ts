@@ -3,10 +3,10 @@ import WebGL = Laya.WebGL;
 class GameMain {
     constructor()  {
         let DESIGN_RESOLUTION = {
-            width: 1136,
-            height: 640,
+            width: 640,
+            height: 1136,
             autoscale: "",
-            screenMode: Laya.Stage.SCREEN_HORIZONTAL,
+            screenMode: Laya.Stage.SCREEN_VERTICAL,
         }
         Laya.MiniAdpter.init();
         Laya.init(DESIGN_RESOLUTION.width, DESIGN_RESOLUTION.height, WebGL);

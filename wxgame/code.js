@@ -64019,17 +64019,19 @@ var resolution;
             configurable: true
         });
         Resolution.prototype.onLoaded = function () {
-            var iphoneX = false;
+            var diffX = 0;
+            var diffY = 0;
             if (Laya.Browser.clientWidth / Laya.Browser.clientHeight > 2) {
                 // iphone x
-                iphoneX = true;
+                diffX = 70;
+            }else if(Laya.Browser.clientHeight / Laya.Browser.clientWidth > 2){
+            	diffY = 70;
             }
+
             if (this.layoutX) {
                 if (this.layoutX == "LEFT") {
                     this.node.x -= resolution.ResolutionConfig.diffWidth;
-                    if (iphoneX) {
-                        this.node.x += 70;
-                    }
+                    this.node.x += diffX;
                 }
                 else if (this.layoutX == "RIGHT") {
                     this.node.x += resolution.ResolutionConfig.diffWidth;
@@ -64038,6 +64040,7 @@ var resolution;
             if (this.layoutY) {
                 if (this.layoutY == "TOP") {
                     this.node.y -= resolution.ResolutionConfig.diffHight;
+                    this.node.y += diffY;
                 }
                 else if (this.layoutY == "BOTTOM") {
                     this.node.y += resolution.ResolutionConfig.diffHight;
@@ -64505,7 +64508,7 @@ var ui;
                 _super.prototype.createChildren.call(this);
                 this.createView(ui.update.UpdateViewUI.uiView);
             };
-            UpdateViewUI.uiView = { "type": "View", "props": { "width": 1136, "renderType": "render", "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 1136, "skin": "update/bg.png", "sizeGrid": "1,1,1,1", "height": 640 }, "child": [{ "type": "Script", "props": { "layoutWidth": true, "layoutHeight": true, "runtime": "resolution.Resolution" } }] }, { "type": "Box", "props": { "y": 222, "x": 112 }, "child": [{ "type": "Script", "props": { "y": 0, "x": 0, "center": true, "runtime": "resolution.Resolution" } }, { "type": "Image", "props": { "x": 256, "skin": "update/logo.png" } }, { "type": "ProgressBar", "props": { "y": 353, "var": "progressLoad", "skin": "update/progress.png" } }] }] };
+            UpdateViewUI.uiView = { "type": "View", "props": { "width": 640, "renderType": "render", "height": 1136 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 640, "skin": "update/bg.png", "sizeGrid": "1,1,1,1", "height": 1136 }, "child": [{ "type": "Script", "props": { "layoutWidth": true, "layoutHeight": true, "runtime": "resolution.Resolution" } }] }, { "type": "Box", "props": { "y": 0, "x": 0, "width": 640, "height": 1136 }, "child": [{ "type": "Script", "props": { "y": 0, "x": 0, "center": true, "runtime": "resolution.Resolution" } }, { "type": "Image", "props": { "y": 474, "x": 134, "skin": "update/logo.png" } }, { "type": "ProgressBar", "props": { "y": 1076, "x": 32, "width": 598, "var": "progressLoad", "skin": "update/progress.png", "height": 25 } }, { "type": "Button", "props": { "y": 0, "x": 0, "width": 100, "stateNum": 1, "skin": "update/blackMask.png", "label": "label", "height": 100 }, "child": [{ "type": "Script", "props": { "layoutY": "TOP", "layoutX": "LEFT", "runtime": "resolution.Resolution" } }] }, { "type": "Button", "props": { "y": 1038, "x": 544, "width": 100, "stateNum": 1, "skin": "update/blackMask.png", "label": "label", "height": 100 }, "child": [{ "type": "Script", "props": { "layoutY": "BOTTOM", "layoutX": "RIGHT", "runtime": "resolution.Resolution" } }] }, { "type": "Button", "props": { "y": 1042, "x": 0, "width": 100, "stateNum": 1, "skin": "update/blackMask.png", "label": "label", "height": 100 }, "child": [{ "type": "Script", "props": { "layoutY": "BOTTOM", "layoutX": "LEFT", "runtime": "resolution.Resolution" } }] }, { "type": "Button", "props": { "y": -5, "x": 549, "width": 100, "stateNum": 1, "skin": "update/blackMask.png", "label": "label", "height": 100 }, "child": [{ "type": "Script", "props": { "layoutY": "TOP", "layoutX": "RIGHT", "runtime": "resolution.Resolution" } }] }] }] };
             return UpdateViewUI;
         }(View));
         update.UpdateViewUI = UpdateViewUI;
@@ -64653,10 +64656,10 @@ var WebGL = Laya.WebGL;
 var GameMain = /** @class */ (function () {
     function GameMain() {
         var DESIGN_RESOLUTION = {
-            width: 1136,
-            height: 640,
+            width: 640,
+            height: 1136,
             autoscale: "",
-            screenMode: Laya.Stage.SCREEN_HORIZONTAL,
+            screenMode: Laya.Stage.SCREEN_VERTICAL,
         };
         Laya.MiniAdpter.init();
         Laya.init(DESIGN_RESOLUTION.width, DESIGN_RESOLUTION.height, WebGL);

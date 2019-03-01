@@ -47,6 +47,9 @@ module resolution {
             if (this.layoutY) {
                 if (this.layoutY == "TOP") {
                     this.node.y -= ResolutionConfig.diffHight;
+                    if (iphoneX) {
+                        this.node.x += 70;
+                    }
                 } else if (this.layoutY == "BOTTOM") {
                     this.node.y += ResolutionConfig.diffHight;
                 }

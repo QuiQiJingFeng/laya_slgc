@@ -14,8 +14,8 @@ module view.update{
 		}
 
 		onLoaded():void{
-			UIManager.getInstance().Hide(view.update.UpdateView)
-			UIManager.getInstance().Show(view.game.GameStartView);
+			// UIManager.getInstance().Hide(view.update.UpdateView)
+			// UIManager.getInstance().Show(view.game.GameStartView);
 		}
 
 		onLoading(value:number):void{

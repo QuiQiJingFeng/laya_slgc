@@ -10,6 +10,8 @@ module resolution {
         /**是否拉伸背景**/
         public layoutWidth: boolean;
         public layoutHeight: boolean;
+        /*是否居中 */
+        public center:boolean;
         /**定义一个变量来接收Box组件实例**/
         private node: Laya.Sprite;
         constructor() {
@@ -18,7 +20,10 @@ module resolution {
 
         public set owner(value: any) {
             this.node = value;
-            this.onLoaded()
+            let self = this;
+            setTimeout(function() {
+                self.onLoaded()
+            }, 0);
         }
 
 
@@ -48,16 +53,17 @@ module resolution {
             }
             let unitWidth = ResolutionConfig.diffWidth;
             let unitHeight = ResolutionConfig.diffHight;
-            console.log("this.layoutX = ", this.layoutX)
-            console.log("this.layoutY = ", this.layoutY)
-            console.log("this.layoutWidth = ", this.layoutWidth)
-            console.log("this.layoutHeight = ", this.layoutHeight)
 
             if (this.layoutWidth) {
                 this.node.width += 2 * unitWidth;
             }
             if (this.layoutHeight) {
                 this.node.height += 2 * unitHeight;
+            }
+
+            if(this.center){
+                this.node.x += unitWidth;
+                this.node.y += unitHeight;
             }
         }
     }

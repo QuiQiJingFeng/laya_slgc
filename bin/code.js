@@ -63664,7 +63664,7 @@ var Common = require('../core/Common');
 })();
 var wxbridge;
 (function (wxbridge) {
-    var VersionUtil = (function () {
+    var VersionUtil = /** @class */ (function () {
         function VersionUtil() {
         }
         VersionUtil.compareVersion = function (v1, v2) {
@@ -63708,7 +63708,7 @@ var wxbridge;
 //# sourceMappingURL=VersionUtil.js.map
 var wxbridge;
 (function (wxbridge) {
-    var Touch = (function () {
+    var Touch = /** @class */ (function () {
         function Touch() {
         }
         //监听开始触摸事件
@@ -63778,7 +63778,7 @@ var wxbridge;
 //# sourceMappingURL=Touch.js.map
 var wxbridge;
 (function (wxbridge) {
-    var RewardVideoAd = (function () {
+    var RewardVideoAd = /** @class */ (function () {
         function RewardVideoAd() {
         }
         //激励视频广告组件默认是隐藏的，因此可以提前创建，以提前初始化组件。
@@ -63796,11 +63796,14 @@ var wxbridge;
                     // 用户点击了【关闭广告】按钮
                     // 小于 2.1.0 的基础库版本，res 是一个 undefined
                     if (res && res.isEnded || res === undefined) {
+                        // 正常播放结束，可以下发游戏奖励
                     }
                     else {
+                        // 播放中途退出，不下发游戏奖励
                     }
                 }
                 else {
+                    //直接发放奖励
                 }
             });
         };
@@ -63818,15 +63821,15 @@ var wxbridge;
                     .then(function () { return _this._video.show(); });
             });
         };
+        RewardVideoAd._video = null;
         return RewardVideoAd;
     }());
-    RewardVideoAd._video = null;
     wxbridge.RewardVideoAd = RewardVideoAd;
 })(wxbridge || (wxbridge = {}));
 //# sourceMappingURL=RewardVideoAd.js.map
 var wxbridge;
 (function (wxbridge) {
-    var Logger = (function () {
+    var Logger = /** @class */ (function () {
         function Logger() {
         }
         Logger.debug = function () {
@@ -63888,7 +63891,7 @@ var wxbridge;
 //# sourceMappingURL=Logger.js.map
 var wxbridge;
 (function (wxbridge) {
-    var BannerAd = (function () {
+    var BannerAd = /** @class */ (function () {
         function BannerAd() {
         }
         BannerAd.createBannerAd = function (adUnitId, x, y, width) {
@@ -63932,21 +63935,21 @@ var wxbridge;
                 this._bannerAd.hide();
             }
         };
+        /*
+            Banner 广告组件的尺寸会根据开发者设置的宽度，
+            即 style.width 进行等比缩放，缩放的范围是 300 到 屏幕宽度。
+            屏幕宽度是以逻辑像素为单位的宽度，通过 wx.getSystemInfoSync() 可以获取到。
+            const {screenWidth} = wx.getSystemInfoSync()
+         */
+        BannerAd._bannerAd = null;
         return BannerAd;
     }());
-    /*
-        Banner 广告组件的尺寸会根据开发者设置的宽度，
-        即 style.width 进行等比缩放，缩放的范围是 300 到 屏幕宽度。
-        屏幕宽度是以逻辑像素为单位的宽度，通过 wx.getSystemInfoSync() 可以获取到。
-        const {screenWidth} = wx.getSystemInfoSync()
-     */
-    BannerAd._bannerAd = null;
     wxbridge.BannerAd = BannerAd;
 })(wxbridge || (wxbridge = {}));
 //# sourceMappingURL=BannerAd.js.map
 var resolution;
 (function (resolution) {
-    var ResolutionConfig = (function () {
+    var ResolutionConfig = /** @class */ (function () {
         function ResolutionConfig() {
         }
         ResolutionConfig.getInstance = function () {
@@ -63982,17 +63985,17 @@ var resolution;
             ResolutionConfig.realWidth += Laya.stage.width + 2 * ResolutionConfig.diffWidth;
             ResolutionConfig.realHeight += Laya.stage.height + 2 * ResolutionConfig.diffHight;
         };
+        ResolutionConfig.__instance = undefined;
+        //左偏移量
+        ResolutionConfig.diffWidth = 0;
+        //右偏移量
+        ResolutionConfig.diffHight = 0;
+        //真实的宽度
+        ResolutionConfig.realWidth = 0;
+        //真实的高度
+        ResolutionConfig.realHeight = 0;
         return ResolutionConfig;
     }());
-    ResolutionConfig.__instance = undefined;
-    //左偏移量
-    ResolutionConfig.diffWidth = 0;
-    //右偏移量
-    ResolutionConfig.diffHight = 0;
-    //真实的宽度
-    ResolutionConfig.realWidth = 0;
-    //真实的高度
-    ResolutionConfig.realHeight = 0;
     resolution.ResolutionConfig = ResolutionConfig;
 })(resolution || (resolution = {}));
 //# sourceMappingURL=ResolutionConfig.js.map
@@ -64001,13 +64004,16 @@ var resolution;
     /*
     附加脚本对应的逻辑类
     */
-    var Resolution = (function () {
+    var Resolution = /** @class */ (function () {
         function Resolution() {
         }
         Object.defineProperty(Resolution.prototype, "owner", {
             set: function (value) {
                 this.node = value;
-                this.onLoaded();
+                var self = this;
+                setTimeout(function () {
+                    self.onLoaded();
+                }, 0);
             },
             enumerable: true,
             configurable: true
@@ -64039,15 +64045,15 @@ var resolution;
             }
             var unitWidth = resolution.ResolutionConfig.diffWidth;
             var unitHeight = resolution.ResolutionConfig.diffHight;
-            console.log("this.layoutX = ", this.layoutX);
-            console.log("this.layoutY = ", this.layoutY);
-            console.log("this.layoutWidth = ", this.layoutWidth);
-            console.log("this.layoutHeight = ", this.layoutHeight);
             if (this.layoutWidth) {
                 this.node.width += 2 * unitWidth;
             }
             if (this.layoutHeight) {
                 this.node.height += 2 * unitHeight;
+            }
+            if (this.center) {
+                this.node.x += unitWidth;
+                this.node.y += unitHeight;
             }
         };
         return Resolution;
@@ -64061,7 +64067,7 @@ var util;
      * HashMap
      * key不能是object，否则会出问题
      */
-    var HashMap = (function () {
+    var HashMap = /** @class */ (function () {
         function HashMap() {
             this.len = 0;
             this.obj = new Object();
@@ -64129,7 +64135,7 @@ var util;
     /**
      *  OrderedMap
      */
-    var OrderedMap = (function () {
+    var OrderedMap = /** @class */ (function () {
         function OrderedMap() {
             this.keyEles = [];
             this.elements = [];
@@ -64195,7 +64201,7 @@ var util;
         return OrderedMap;
     }());
     util.OrderedMap = OrderedMap;
-    var MapIterator = (function () {
+    var MapIterator = /** @class */ (function () {
         function MapIterator(e) {
             this.elements = e;
             this.ps = 0;
@@ -64221,17 +64227,26 @@ var util;
     util.MapIterator = MapIterator;
 })(util || (util = {}));
 //# sourceMappingURL=Map.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var UIManagerInternal;
 (function (UIManagerInternal) {
+    var _a;
     /**
      * ui管理类，通过名字管理界面
     */
-    var UIManager = (function () {
+    var UIManager = /** @class */ (function () {
         function UIManager() {
             this.gameUIs = new util.OrderedMap();
         }
@@ -64420,23 +64435,22 @@ var UIManagerInternal;
                 }
             }
         };
+        UIManager.GLOBAL_UI_ID = 0;
+        UIManager.LAYER_START = 0;
+        UIManager.LAYER_NORMAL = 0;
+        UIManager.LAYER_OVERLAY = 1;
+        UIManager.LAYER_OVERLAY_1 = 2;
+        UIManager.LAYER_MAX = 2;
+        UIManager.LAYER_ORDER = (_a = {},
+            _a[UIManager.LAYER_NORMAL] = 0,
+            _a[UIManager.LAYER_OVERLAY] = 100,
+            _a[UIManager.LAYER_OVERLAY_1] = 200,
+            _a);
         return UIManager;
     }());
-    UIManager.GLOBAL_UI_ID = 0;
-    UIManager.LAYER_START = 0;
-    UIManager.LAYER_NORMAL = 0;
-    UIManager.LAYER_OVERLAY = 1;
-    UIManager.LAYER_OVERLAY_1 = 2;
-    UIManager.LAYER_MAX = 2;
-    UIManager.LAYER_ORDER = (_a = {},
-        _a[UIManager.LAYER_NORMAL] = 0,
-        _a[UIManager.LAYER_OVERLAY] = 100,
-        _a[UIManager.LAYER_OVERLAY_1] = 200,
-        _a);
     UIManagerInternal.UIManager = UIManager;
-    var _a;
 })(UIManagerInternal || (UIManagerInternal = {}));
-var UIManager = (function (_super) {
+var UIManager = /** @class */ (function (_super) {
     __extends(UIManager, _super);
     function UIManager() {
         return _super !== null && _super.apply(this, arguments) || this;
@@ -64444,18 +64458,26 @@ var UIManager = (function (_super) {
     return UIManager;
 }(UIManagerInternal.UIManager));
 //# sourceMappingURL=UIManager.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var View = laya.ui.View;
 var Dialog = laya.ui.Dialog;
 var ui;
 (function (ui) {
     var gameStart;
     (function (gameStart) {
-        var GameStartViewUI = (function (_super) {
+        var GameStartViewUI = /** @class */ (function (_super) {
             __extends(GameStartViewUI, _super);
             function GameStartViewUI() {
                 return _super.call(this) || this;
@@ -64464,16 +64486,16 @@ var ui;
                 _super.prototype.createChildren.call(this);
                 this.createView(ui.gameStart.GameStartViewUI.uiView);
             };
+            GameStartViewUI.uiView = { "type": "View", "props": { "width": 1136, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 259, "x": 520, "skin": "texture/cbtnAwards1.png" } }, { "type": "Image", "props": { "y": 400, "x": 469, "skin": "texture/cbtnBack1.png" } }, { "type": "Image", "props": { "y": 374, "x": 597, "skin": "texture/cbtnCredits1.png" } }] };
             return GameStartViewUI;
         }(View));
-        GameStartViewUI.uiView = { "type": "View", "props": { "width": 1136, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 259, "x": 520, "skin": "texture/cbtnAwards1.png" } }, { "type": "Image", "props": { "y": 400, "x": 469, "skin": "texture/cbtnBack1.png" } }, { "type": "Image", "props": { "y": 374, "x": 597, "skin": "texture/cbtnCredits1.png" } }] };
         gameStart.GameStartViewUI = GameStartViewUI;
     })(gameStart = ui.gameStart || (ui.gameStart = {}));
 })(ui || (ui = {}));
 (function (ui) {
     var update;
     (function (update) {
-        var UpdateViewUI = (function (_super) {
+        var UpdateViewUI = /** @class */ (function (_super) {
             __extends(UpdateViewUI, _super);
             function UpdateViewUI() {
                 return _super.call(this) || this;
@@ -64483,24 +64505,32 @@ var ui;
                 _super.prototype.createChildren.call(this);
                 this.createView(ui.update.UpdateViewUI.uiView);
             };
+            UpdateViewUI.uiView = { "type": "View", "props": { "width": 1136, "renderType": "render", "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 1136, "skin": "update/bg.png", "sizeGrid": "1,1,1,1", "height": 640 }, "child": [{ "type": "Script", "props": { "layoutWidth": true, "layoutHeight": true, "runtime": "resolution.Resolution" } }] }, { "type": "Box", "props": { "y": 222, "x": 112 }, "child": [{ "type": "Script", "props": { "y": 0, "x": 0, "center": true, "runtime": "resolution.Resolution" } }, { "type": "Image", "props": { "x": 256, "skin": "update/logo.png" } }, { "type": "ProgressBar", "props": { "y": 353, "var": "progressLoad", "skin": "update/progress.png" } }] }] };
             return UpdateViewUI;
         }(View));
-        UpdateViewUI.uiView = { "type": "View", "props": { "width": 1136, "renderType": "render", "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 1136, "var": "root", "skin": "update/bg.png", "sizeGrid": "1,1,1,1", "height": 640 }, "child": [{ "type": "Script", "props": { "layoutWidth": true, "layoutHeight": true, "runtime": "resolution.Resolution" } }] }, { "type": "Image", "props": { "y": 222, "x": 368, "skin": "update/logo.png" } }, { "type": "ProgressBar", "props": { "y": 575, "x": 112, "var": "progressLoad", "skin": "update/progress.png" } }] };
         update.UpdateViewUI = UpdateViewUI;
     })(update = ui.update || (ui.update = {}));
 })(ui || (ui = {}));
 //# sourceMappingURL=layaUI.max.all.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**Created by the LayaAirIDE*/
 var view;
 (function (view) {
     var game;
     (function (game) {
-        var GameStartView = (function (_super) {
+        var GameStartView = /** @class */ (function (_super) {
             __extends(GameStartView, _super);
             function GameStartView() {
                 var _this = _super.call(this) || this;
@@ -64569,17 +64599,25 @@ var view;
     })(game = view.game || (view.game = {}));
 })(view || (view = {}));
 //# sourceMappingURL=GameStartView.js.map
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**Created by the LayaAirIDE*/
 var view;
 (function (view) {
     var update;
     (function (update) {
-        var UpdateView = (function (_super) {
+        var UpdateView = /** @class */ (function (_super) {
             __extends(UpdateView, _super);
             function UpdateView() {
                 return _super.call(this) || this;
@@ -64591,8 +64629,8 @@ var view;
                 Laya.loader.load(resources, Laya.Handler.create(this, this.onLoaded), Laya.Handler.create(this, this.onLoading, null, false));
             };
             UpdateView.prototype.onLoaded = function () {
-                UIManager.getInstance().Hide(view.update.UpdateView);
-                UIManager.getInstance().Show(view.game.GameStartView);
+                // UIManager.getInstance().Hide(view.update.UpdateView)
+                // UIManager.getInstance().Show(view.game.GameStartView);
             };
             UpdateView.prototype.onLoading = function (value) {
                 this.progressLoad.value = value;
@@ -64612,7 +64650,7 @@ var view;
 //# sourceMappingURL=UpdateView.js.map
 var WebGL = Laya.WebGL;
 // 程序入口
-var GameMain = (function () {
+var GameMain = /** @class */ (function () {
     function GameMain() {
         var DESIGN_RESOLUTION = {
             width: 1136,

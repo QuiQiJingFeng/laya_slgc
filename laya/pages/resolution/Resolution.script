@@ -3,4 +3,6 @@
     <prop name="layoutY" tips="Y方向适配" type="option" option="TOP,BOTTOM"/>
     <prop name="layoutWidth" tips="是否拉伸宽度" type="bool"/>
     <prop name="layoutHeight" tips="是否拉伸高度" type="bool"/>
+    <prop name="center" tips="是否居中" type="bool"/>
+
 </Resolution>

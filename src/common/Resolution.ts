@@ -29,17 +29,18 @@ module resolution {
 
         private onLoaded(): void {
             let iphoneX = false;
+            let diffX = 0;
+            let diffY = 0;
             if (Laya.Browser.clientWidth / Laya.Browser.clientHeight > 2) {
                 // iphone x
-                iphoneX = true;
+                diffX = 70;
+            }else if(Laya.Browser.clientHeight / Laya.Browser.clientWidth > 2){
+            	diffY = 70;
             }
             if (this.layoutX) {
                 if (this.layoutX == "LEFT") {
                     this.node.x -= ResolutionConfig.diffWidth;
-                    if (iphoneX) {
-                        this.node.x += 70;
-                    }
-
+                    this.node.x += diffX;
                 } else if (this.layoutX == "RIGHT") {
                     this.node.x += ResolutionConfig.diffWidth;
                 }
@@ -47,6 +48,7 @@ module resolution {
             if (this.layoutY) {
                 if (this.layoutY == "TOP") {
                     this.node.y -= ResolutionConfig.diffHight;
+                    this.node.y += diffY;
                 } else if (this.layoutY == "BOTTOM") {
                     this.node.y += ResolutionConfig.diffHight;
                 }

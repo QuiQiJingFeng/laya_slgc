@@ -1,8 +1,8 @@
 {
     "x":0,
     "type":"View",
-    "selectedBox":23,
-    "selecteID":27,
+    "selectedBox":17,
+    "selecteID":23,
     "searchKey":"View",
     "referenceLines":[
         ],
@@ -97,114 +97,6 @@
                     "compId":15,
                     "child":[
                         ]
-                },
-                {
-                    "x":30,
-                    "type":"Button",
-                    "props":{"y":-5,"x":0,"width":100,"skin":"update/blackMask.png","label":"label","height":100},
-                    "nodeParent":17,
-                    "label":"Button",
-                    "isOpen":true,
-                    "isDirectory":true,
-                    "isAniNode":true,
-                    "hasChild":true,
-                    "compId":20,
-                    "child":[
-                        {
-                            "x":45,
-                            "type":"Script",
-                            "source":"laya/pages/resolution/Resolution.script",
-                            "props":{"layoutY":"TOP","layoutX":"LEFT"},
-                            "nodeParent":20,
-                            "label":"Resolution",
-                            "isDirectory":false,
-                            "isAniNode":true,
-                            "hasChild":false,
-                            "compId":24,
-                            "child":[
-                                ]
-                        }]
-                },
-                {
-                    "x":30,
-                    "type":"Button",
-                    "props":{"y":539,"x":0,"width":100,"skin":"update/blackMask.png","label":"label","height":100},
-                    "nodeParent":17,
-                    "label":"Button",
-                    "isOpen":true,
-                    "isDirectory":true,
-                    "isAniNode":true,
-                    "hasChild":true,
-                    "compId":21,
-                    "child":[
-                        {
-                            "x":45,
-                            "type":"Script",
-                            "source":"laya/pages/resolution/Resolution.script",
-                            "props":{"layoutY":"BOTTOM","layoutX":"LEFT"},
-                            "nodeParent":21,
-                            "label":"Resolution",
-                            "isDirectory":false,
-                            "isAniNode":true,
-                            "hasChild":false,
-                            "compId":25,
-                            "child":[
-                                ]
-                        }]
-                },
-                {
-                    "x":30,
-                    "type":"Button",
-                    "props":{"y":541,"x":1037,"width":100,"skin":"update/blackMask.png","label":"label","height":100},
-                    "nodeParent":17,
-                    "label":"Button",
-                    "isOpen":true,
-                    "isDirectory":true,
-                    "isAniNode":true,
-                    "hasChild":true,
-                    "compId":22,
-                    "child":[
-                        {
-                            "x":45,
-                            "type":"Script",
-                            "source":"laya/pages/resolution/Resolution.script",
-                            "props":{"layoutY":"BOTTOM","layoutX":"RIGHT"},
-                            "nodeParent":22,
-                            "label":"Resolution",
-                            "isDirectory":false,
-                            "isAniNode":true,
-                            "hasChild":false,
-                            "compId":26,
-                            "child":[
-                                ]
-                        }]
-                },
-                {
-                    "x":30,
-                    "type":"Button",
-                    "props":{"y":-3,"x":1037,"width":100,"skin":"update/blackMask.png","label":"label","height":100},
-                    "nodeParent":17,
-                    "label":"Button",
-                    "isOpen":true,
-                    "isDirectory":true,
-                    "isAniNode":true,
-                    "hasChild":true,
-                    "compId":23,
-                    "child":[
-                        {
-                            "x":45,
-                            "type":"Script",
-                            "source":"laya/pages/resolution/Resolution.script",
-                            "props":{"layoutY":"TOP","layoutX":"RIGHT"},
-                            "nodeParent":23,
-                            "label":"Resolution",
-                            "isDirectory":false,
-                            "isAniNode":true,
-                            "hasChild":false,
-                            "compId":27,
-                            "child":[
-                                ]
-                        }]
                 }]
         }],
     "animations":[

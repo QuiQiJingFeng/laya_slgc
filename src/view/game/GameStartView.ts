@@ -1,6 +1,6 @@
 /**Created by the LayaAirIDE*/
 module view.game{
-	export class GameStartView extends ui.gameStart.GameStartViewUI implements IUIManagerSupport{
+	export class GameStartView extends ui.game.GameStartViewUI implements IUIManagerSupport{
 		constructor(){
 			super();
 			// this.initPhysicsWord()

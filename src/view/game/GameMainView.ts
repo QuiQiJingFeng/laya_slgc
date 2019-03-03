@@ -1,22 +1,16 @@
 /**Created by the LayaAirIDE*/
 module view.game{
-	export class GameStartView extends ui.gameStart.GameStartViewUI implements IUIManagerSupport{
+	export class GameMainView extends ui.game.GameMainViewUI implements IUIManagerSupport{
 		constructor(){
 			super();
-			// this.initPhysicsWord()
-			this.testBannerAd()
-		}
-
-		testBannerAd():void{
-			wxbridge.BannerAd.createBannerAd("adUnitId",100,100,300)
-			
+			this.initPhysicsWord()
+ 
 		}
 
 		initPhysicsWord():void{
 			let Matter = Laya.Browser.window.Matter;
 			let LayaRender = Laya.Browser.window.LayaRender;
 			let Engine = Matter.Engine,
-				Render = Matter.Render,
 				World = Matter.World,
 				Bodies = Matter.Bodies,
 				Constraint = Matter.Constraint;
@@ -30,9 +24,11 @@ module view.game{
 					showAxes: true, // 刚体轴线
                 }
 			});
-			let realHeight = resolution.ResolutionConfig.realHeight;
-			let realWidth = resolution.ResolutionConfig.realWidth;
-			var ground = Bodies.rectangle(realWidth/2,realHeight,realWidth,10, { isStatic: true });
+			let realHeight = Laya.Browser.height;
+			let realWidth = Laya.Browser.width;
+			console.log("aaaaaaaa",realWidth)
+			console.log("bbbbbb",realHeight)
+			var ground = Bodies.rectangle(realWidth/2,realHeight/2,realWidth/2,realHeight/2, { isStatic: true });
 
 			// add all of the bodies to the world
 			World.add(engine.world, [ground]);

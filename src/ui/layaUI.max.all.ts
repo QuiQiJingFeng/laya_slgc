@@ -1,15 +1,15 @@
 
 import View=laya.ui.View;
 import Dialog=laya.ui.Dialog;
-module ui.gameStart {
-    export class GameStartViewUI extends View {
+module ui.game {
+    export class GameMainViewUI extends View {
 
-        public static  uiView:any ={"type":"View","props":{"width":1136,"height":640},"child":[{"type":"Image","props":{"y":259,"x":520,"skin":"texture/cbtnAwards1.png"}},{"type":"Image","props":{"y":400,"x":469,"skin":"texture/cbtnBack1.png"}},{"type":"Image","props":{"y":374,"x":597,"skin":"texture/cbtnCredits1.png"}}]};
+        public static  uiView:any ={"type":"View","props":{"width":640,"height":1136}};
         constructor(){ super()}
         createChildren():void {
         
             super.createChildren();
-            this.createView(ui.gameStart.GameStartViewUI.uiView);
+            this.createView(ui.game.GameMainViewUI.uiView);
 
         }
 

@@ -63960,30 +63960,28 @@ var resolution;
         };
         ResolutionConfig.prototype.setResoulution = function () {
             var autoscale = Laya.stage.scaleMode;
+            var ratio = 1;
             if (autoscale == "fixedwidth") {
                 //适应宽度，此时舞台宽度跟浏览器宽度是等价的
                 //1个坐标单位 等价于多少个物理像素
-                var unit = Laya.Browser.clientWidth / Laya.stage.designWidth;
-                //舞台实际暂用的物理像素个数
-                var realHeight = Laya.stage.designHeight * unit;
+                ratio = Laya.Browser.clientWidth / Laya.stage.designWidth;
                 //黑边暂用的物理像素的个数
-                var blackRealHeight = Laya.Browser.clientHeight - realHeight;
+                var blackRealHeight = Laya.Browser.clientHeight / ratio - Laya.stage.designHeight;
                 // Laya.stage.y += blackRealHeight/2/unit;
-                ResolutionConfig.diffHight = blackRealHeight / 2 / unit;
+                ResolutionConfig.diffHight = blackRealHeight / 2;
             }
             else if (autoscale == "fixedheight") {
                 //适应宽度，此时舞台宽度跟浏览器宽度是等价的
                 //1个坐标单位 等价于多少个物理像素
-                var unit = Laya.Browser.clientHeight / Laya.stage.designHeight;
-                //舞台实际暂用的物理像素个数
-                var realWidth = Laya.stage.designWidth * unit;
+                ratio = Laya.Browser.clientHeight / Laya.stage.designHeight;
                 //黑边暂用的物理像素的个数
-                var blackRealWidth = Laya.Browser.clientWidth - realWidth;
+                var blackRealWidth = Laya.Browser.clientWidth / ratio - Laya.stage.designWidth;
                 // Laya.stage.x += blackRealWidth/2/unit;
-                ResolutionConfig.diffWidth = blackRealWidth / 2 / unit;
+                ResolutionConfig.diffWidth = blackRealWidth / 2;
             }
-            ResolutionConfig.realWidth += Laya.stage.width + 2 * ResolutionConfig.diffWidth;
-            ResolutionConfig.realHeight += Laya.stage.height + 2 * ResolutionConfig.diffHight;
+            //坐标宽高 等于分辨率/缩放系数
+            ResolutionConfig.realWidth = Laya.Browser.clientWidth / ratio;
+            ResolutionConfig.realHeight = Laya.Browser.clientHeight / ratio;
         };
         ResolutionConfig.__instance = undefined;
         //左偏移量
@@ -64020,16 +64018,19 @@ var resolution;
         });
         Resolution.prototype.onLoaded = function () {
             var iphoneX = false;
+            var diffX = 0;
+            var diffY = 0;
             if (Laya.Browser.clientWidth / Laya.Browser.clientHeight > 2) {
                 // iphone x
-                iphoneX = true;
+                diffX = 70;
+            }
+            else if (Laya.Browser.clientHeight / Laya.Browser.clientWidth > 2) {
+                diffY = 70;
             }
             if (this.layoutX) {
                 if (this.layoutX == "LEFT") {
                     this.node.x -= resolution.ResolutionConfig.diffWidth;
-                    if (iphoneX) {
-                        this.node.x += 70;
-                    }
+                    this.node.x += diffX;
                 }
                 else if (this.layoutX == "RIGHT") {
                     this.node.x += resolution.ResolutionConfig.diffWidth;
@@ -64038,9 +64039,7 @@ var resolution;
             if (this.layoutY) {
                 if (this.layoutY == "TOP") {
                     this.node.y -= resolution.ResolutionConfig.diffHight;
-                    if (iphoneX) {
-                        this.node.x += 50;
-                    }
+                    this.node.y += diffY;
                 }
                 else if (this.layoutY == "BOTTOM") {
                     this.node.y += resolution.ResolutionConfig.diffHight;
@@ -64478,22 +64477,22 @@ var View = laya.ui.View;
 var Dialog = laya.ui.Dialog;
 var ui;
 (function (ui) {
-    var gameStart;
-    (function (gameStart) {
-        var GameStartViewUI = /** @class */ (function (_super) {
-            __extends(GameStartViewUI, _super);
-            function GameStartViewUI() {
+    var game;
+    (function (game) {
+        var GameMainViewUI = /** @class */ (function (_super) {
+            __extends(GameMainViewUI, _super);
+            function GameMainViewUI() {
                 return _super.call(this) || this;
             }
-            GameStartViewUI.prototype.createChildren = function () {
+            GameMainViewUI.prototype.createChildren = function () {
                 _super.prototype.createChildren.call(this);
-                this.createView(ui.gameStart.GameStartViewUI.uiView);
+                this.createView(ui.game.GameMainViewUI.uiView);
             };
-            GameStartViewUI.uiView = { "type": "View", "props": { "width": 1136, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 259, "x": 520, "skin": "texture/cbtnAwards1.png" } }, { "type": "Image", "props": { "y": 400, "x": 469, "skin": "texture/cbtnBack1.png" } }, { "type": "Image", "props": { "y": 374, "x": 597, "skin": "texture/cbtnCredits1.png" } }] };
-            return GameStartViewUI;
+            GameMainViewUI.uiView = { "type": "View", "props": { "width": 640, "height": 1136 } };
+            return GameMainViewUI;
         }(View));
-        gameStart.GameStartViewUI = GameStartViewUI;
-    })(gameStart = ui.gameStart || (ui.gameStart = {}));
+        game.GameMainViewUI = GameMainViewUI;
+    })(game = ui.game || (ui.game = {}));
 })(ui || (ui = {}));
 (function (ui) {
     var update;
@@ -64533,21 +64532,17 @@ var view;
 (function (view) {
     var game;
     (function (game) {
-        var GameStartView = /** @class */ (function (_super) {
-            __extends(GameStartView, _super);
-            function GameStartView() {
+        var GameMainView = /** @class */ (function (_super) {
+            __extends(GameMainView, _super);
+            function GameMainView() {
                 var _this = _super.call(this) || this;
-                // this.initPhysicsWord()
-                _this.testBannerAd();
+                _this.initPhysicsWord();
                 return _this;
             }
-            GameStartView.prototype.testBannerAd = function () {
-                wxbridge.BannerAd.createBannerAd("adUnitId", 100, 100, 300);
-            };
-            GameStartView.prototype.initPhysicsWord = function () {
+            GameMainView.prototype.initPhysicsWord = function () {
                 var Matter = Laya.Browser.window.Matter;
                 var LayaRender = Laya.Browser.window.LayaRender;
-                var Engine = Matter.Engine, Render = Matter.Render, World = Matter.World, Bodies = Matter.Bodies, Constraint = Matter.Constraint;
+                var Engine = Matter.Engine, World = Matter.World, Bodies = Matter.Bodies, Constraint = Matter.Constraint;
                 var engine = Engine.create();
                 //render(渲染器)将要渲染的物理引擎是之前所创建的engine，而渲染的对象是html网页的body
                 var render = LayaRender.create({
@@ -64558,9 +64553,11 @@ var view;
                         showAxes: true,
                     }
                 });
-                var realHeight = resolution.ResolutionConfig.realHeight;
-                var realWidth = resolution.ResolutionConfig.realWidth;
-                var ground = Bodies.rectangle(realWidth / 2, realHeight, realWidth, 10, { isStatic: true });
+                var realHeight = Laya.Browser.height;
+                var realWidth = Laya.Browser.width;
+                console.log("aaaaaaaa", realWidth);
+                console.log("bbbbbb", realHeight);
+                var ground = Bodies.rectangle(realWidth / 2, realHeight / 2, realWidth / 2, realHeight / 2, { isStatic: true });
                 // add all of the bodies to the world
                 World.add(engine.world, [ground]);
                 var pos = { x: 300, y: 600 };
@@ -64594,14 +64591,14 @@ var view;
                 Engine.run(engine);
                 LayaRender.run(render);
             };
-            GameStartView.prototype.OnShow = function () {
+            GameMainView.prototype.OnShow = function () {
             };
-            return GameStartView;
-        }(ui.gameStart.GameStartViewUI));
-        game.GameStartView = GameStartView;
+            return GameMainView;
+        }(ui.game.GameMainViewUI));
+        game.GameMainView = GameMainView;
     })(game = view.game || (view.game = {}));
 })(view || (view = {}));
-//# sourceMappingURL=GameStartView.js.map
+//# sourceMappingURL=GameMainView.js.map
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -64632,8 +64629,8 @@ var view;
                 Laya.loader.load(resources, Laya.Handler.create(this, this.onLoaded), Laya.Handler.create(this, this.onLoading, null, false));
             };
             UpdateView.prototype.onLoaded = function () {
-                // UIManager.getInstance().Hide(view.update.UpdateView)
-                // UIManager.getInstance().Show(view.game.GameStartView);
+                UIManager.getInstance().Hide(view.update.UpdateView);
+                UIManager.getInstance().Show(view.game.GameMainView);
             };
             UpdateView.prototype.onLoading = function (value) {
                 this.progressLoad.value = value;

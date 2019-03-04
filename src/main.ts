@@ -27,7 +27,7 @@ class GameMain {
             //UI适配
             resolution.ResolutionConfig.getInstance().setResoulution()
             if (Laya.Browser.onMiniGame) {
-                Laya.URL.basePath = "http://172.16.2.242:1111/"
+                Laya.URL.basePath = "http://192.168.1.101:1111/"
             }
             //本地文件
             Laya.MiniAdpter.nativefiles = [

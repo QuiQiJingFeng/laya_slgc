@@ -64536,13 +64536,41 @@ var view;
             __extends(GameMainView, _super);
             function GameMainView() {
                 var _this = _super.call(this) || this;
+                _this.first = false;
                 _this.initPhysicsWord();
                 return _this;
             }
-            GameMainView.prototype.initPhysicsWord = function () {
+            GameMainView.prototype.createGround = function () {
                 var Matter = Laya.Browser.window.Matter;
                 var LayaRender = Laya.Browser.window.LayaRender;
                 var Engine = Matter.Engine, World = Matter.World, Bodies = Matter.Bodies, Constraint = Matter.Constraint;
+                var border = 20;
+                var realHeight = resolution.ResolutionConfig.realHeight;
+                var realWidth = resolution.ResolutionConfig.realWidth;
+                var bottomGround = { x: realWidth / 2, y: realHeight - border / 2, width: realWidth, height: border };
+                var options = {
+                    isStatic: true,
+                    render: {
+                        fillStyle: '#dadada',
+                        strokeStyle: '#dadada'
+                    },
+                    collisionFilter: {
+                        group: 'ground'
+                    }
+                };
+                //let topGround = {x:realWidth/2,y:border/2,width:realWidth,height:border};
+                var leftGround = { x: border / 2, y: realHeight / 2, width: border, height: realHeight };
+                var rightGround = { x: realWidth - border / 2, y: realHeight / 2, width: border, height: realHeight };
+                var ground1 = Bodies.rectangle(bottomGround.x, bottomGround.y, bottomGround.width, bottomGround.height, options);
+                //var ground2 = Bodies.rectangle(topGround.x,topGround.y,topGround.width,topGround.height, options);
+                var ground3 = Bodies.rectangle(leftGround.x, leftGround.y, leftGround.width, leftGround.height, options);
+                var ground4 = Bodies.rectangle(rightGround.x, rightGround.y, rightGround.width, rightGround.height, options);
+                return [ground1, ground3, ground4];
+            };
+            GameMainView.prototype.initPhysicsWord = function () {
+                var Matter = Laya.Browser.window.Matter;
+                var LayaRender = Laya.Browser.window.LayaRender;
+                var Engine = Matter.Engine, World = Matter.World, Bodies = Matter.Bodies, Constraint = Matter.Constraint, Bounds = Matter.Bounds, Event = Matter.Event;
                 var engine = Engine.create();
                 //render(渲染器)将要渲染的物理引擎是之前所创建的engine，而渲染的对象是html网页的body
                 var render = LayaRender.create({
@@ -64551,43 +64579,24 @@ var view;
                     options: {
                         wireframes: true,
                         showAxes: true,
+                        hasBounds: true //AABB框
                     }
                 });
-                var realHeight = Laya.Browser.height;
-                var realWidth = Laya.Browser.width;
-                console.log("aaaaaaaa", realWidth);
-                console.log("bbbbbb", realHeight);
-                var ground = Bodies.rectangle(realWidth / 2, realHeight / 2, realWidth / 2, realHeight / 2, { isStatic: true });
                 // add all of the bodies to the world
-                World.add(engine.world, [ground]);
-                var pos = { x: 300, y: 600 };
-                var radius = 30;
-                var circle0 = Bodies.circle(pos.x, pos.y - radius, radius);
-                var circle1 = Bodies.circle(pos.x - 2 * radius, pos.y + radius, radius);
-                var circle2 = Bodies.circle(pos.x + 2 * radius, pos.y + radius, radius);
-                var rotate1 = Constraint.create({
-                    bodyA: circle1,
-                    pointA: { x: 0, y: 0 },
-                    bodyB: circle2,
-                    length: 0,
-                    stiffness: 1 //刚度值(0,1]，值越大，物体刚度越强，越不容易拉伸
+                World.add(engine.world, this.createGround());
+                var player = Bodies.circle(200, 500, 20, {
+                    density: 5,
+                    render: {
+                        fillStyle: '#4FC3F7',
+                        strokeStyle: '#4FC3F7'
+                    },
+                    collisionFilter: {
+                        group: 'player'
+                    }
                 });
-                var rotate2 = Constraint.create({
-                    bodyA: circle0,
-                    pointA: { x: 0, y: 0 },
-                    bodyB: circle1,
-                    length: 0,
-                    stiffness: 1 //刚度值(0,1]，值越大，物体刚度越强，越不容易拉伸
-                });
-                var rotate3 = Constraint.create({
-                    bodyA: circle0,
-                    pointA: { x: 0, y: 0 },
-                    bodyB: circle2,
-                    length: 0,
-                    stiffness: 1 //刚度值(0,1]，值越大，物体刚度越强，越不容易拉伸
-                });
-                World.add(engine.world, [rotate1, rotate2, rotate3, circle0, circle1, circle2]);
-                Matter.Body.setVelocity(circle0, { x: 30, y: 0 });
+                World.add(engine.world, player);
+                // Matter.Body.setVelocity(circle0,{x:30,y:0});
+                // Bounds.shift(render.bounds, {x: 0, y: 100});
                 Engine.run(engine);
                 LayaRender.run(render);
             };
@@ -64674,7 +64683,7 @@ var GameMain = /** @class */ (function () {
             //UI适配
             resolution.ResolutionConfig.getInstance().setResoulution();
             if (Laya.Browser.onMiniGame) {
-                Laya.URL.basePath = "http://172.16.2.242:1111/";
+                Laya.URL.basePath = "http://192.168.1.101:1111/";
             }
             //本地文件
             Laya.MiniAdpter.nativefiles = [

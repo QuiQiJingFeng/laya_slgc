@@ -16,6 +16,10 @@ module view.update{
 		onLoaded():void{
 			// UIManager.getInstance().Hide(view.update.UpdateView)
 			// UIManager.getInstance().Show(view.game.GameStartView);
+			let texture = util.Qrcode.createQrcode("赵庆龙",300,300)
+			Laya.stage.addChild(texture)
+			 
+
 		}
 
 		onLoading(value:number):void{

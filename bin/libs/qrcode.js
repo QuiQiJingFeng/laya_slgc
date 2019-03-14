@@ -449,6 +449,7 @@ QRCodeAlg.prototype = {
         return this.modules[row][col];
     }
 };
+window.QRCodeAlg = QRCodeAlg
 /**
  * 填充字段
  */

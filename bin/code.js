@@ -63662,9 +63662,1188 @@ var Common = require('../core/Common');
 
 	window.LayaRender = LayaRender;
 })();
+/**
+ * 三方二维码生成核心库
+ * @ref https://github.com/aralejs/qrcode
+ */
+
+/**
+ * 获取单个字符的utf8编码
+ * unicode BMP平面约65535个字符
+ * @param {num} code
+ * return {array}
+ */
+function unicodeFormat8(code){
+    // 1 byte
+    var c0, c1, c2;
+    if(code < 128){
+        return [code];
+        // 2 bytes
+    }else if(code < 2048){
+        c0 = 192 + (code >> 6);
+        c1 = 128 + (code & 63);
+        return [c0, c1];
+        // 3 bytes
+    }else{
+        c0 = 224 + (code >> 12);
+        c1 = 128 + (code >> 6 & 63);
+        c2 = 128 + (code & 63);
+        return [c0, c1, c2];
+    }
+}
+
+/**
+ * 获取字符串的utf8编码字节串
+ * @param {string} string
+ * @return {array}
+ */
+function getUTF8Bytes(string){
+    var utf8codes = [];
+    for(var i=0; i<string.length; i++){
+        var code = string.charCodeAt(i);
+        var utf8 = unicodeFormat8(code);
+        for(var j=0; j<utf8.length; j++){
+            utf8codes.push(utf8[j]);
+        }
+    }
+    return utf8codes;
+}
+
+/**
+ * 二维码算法实现
+ * @param {string} data              要编码的信息字符串
+ * @param {number} errorCorrectLevel 纠错等级
+ */
+function QRCodeAlg(data, errorCorrectLevel) {
+    this.typeNumber = -1; //版本
+    this.errorCorrectLevel = errorCorrectLevel;
+    this.modules = null;  //二维矩阵，存放最终结果
+    this.moduleCount = 0; //矩阵大小
+    this.dataCache = null; //数据缓存
+    this.rsBlocks = null; //版本数据信息
+    this.totalDataCount = -1; //可使用的数据量
+    this.data = data;
+    this.utf8bytes = getUTF8Bytes(data);
+    this.make();
+}
+
+QRCodeAlg.prototype = {
+    constructor: QRCodeAlg,
+    /**
+     * 获取二维码矩阵大小
+     * @return {num} 矩阵大小
+     */
+    getModuleCount: function() {
+        return this.moduleCount;
+    },
+    /**
+     * 编码
+     */
+    make: function() {
+        this.getRightType();
+        this.dataCache = this.createData();
+        this.createQrcode();
+    },
+    /**
+     * 设置二位矩阵功能图形
+     * @param  {bool} test 表示是否在寻找最好掩膜阶段
+     * @param  {num} maskPattern 掩膜的版本
+     */
+    makeImpl: function(maskPattern) {
+
+        this.moduleCount = this.typeNumber * 4 + 17;
+        this.modules = new Array(this.moduleCount);
+
+        for (var row = 0; row < this.moduleCount; row++) {
+
+            this.modules[row] = new Array(this.moduleCount);
+
+        }
+        this.setupPositionProbePattern(0, 0);
+        this.setupPositionProbePattern(this.moduleCount - 7, 0);
+        this.setupPositionProbePattern(0, this.moduleCount - 7);
+        this.setupPositionAdjustPattern();
+        this.setupTimingPattern();
+        this.setupTypeInfo(true, maskPattern);
+
+        if (this.typeNumber >= 7) {
+            this.setupTypeNumber(true);
+        }
+        this.mapData(this.dataCache, maskPattern);
+    },
+    /**
+     * 设置二维码的位置探测图形
+     * @param  {num} row 探测图形的中心横坐标
+     * @param  {num} col 探测图形的中心纵坐标
+     */
+    setupPositionProbePattern: function(row, col) {
+
+        for (var r = -1; r <= 7; r++) {
+
+            if (row + r <= -1 || this.moduleCount <= row + r) continue;
+
+            for (var c = -1; c <= 7; c++) {
+
+                if (col + c <= -1 || this.moduleCount <= col + c) continue;
+
+                if ((0 <= r && r <= 6 && (c == 0 || c == 6)) || (0 <= c && c <= 6 && (r == 0 || r == 6)) || (2 <= r && r <= 4 && 2 <= c && c <= 4)) {
+                    this.modules[row + r][col + c] = true;
+                } else {
+                    this.modules[row + r][col + c] = false;
+                }
+            }
+        }
+    },
+    /**
+     * 创建二维码
+     * @return {[type]} [description]
+     */
+    createQrcode: function() {
+
+        var minLostPoint = 0;
+        var pattern = 0;
+        var bestModules = null;
+
+        for (var i = 0; i < 8; i++) {
+
+            this.makeImpl(i);
+
+            var lostPoint = QRUtil.getLostPoint(this);
+            if (i == 0 || minLostPoint > lostPoint) {
+                minLostPoint = lostPoint;
+                pattern = i;
+                bestModules = this.modules;
+            }
+        }
+        this.modules = bestModules;
+        this.setupTypeInfo(false, pattern);
+
+        if (this.typeNumber >= 7) {
+            this.setupTypeNumber(false);
+        }
+
+    },
+    /**
+     * 设置定位图形
+     * @return {[type]} [description]
+     */
+    setupTimingPattern: function() {
+
+        for (var r = 8; r < this.moduleCount - 8; r++) {
+            if (this.modules[r][6] != null) {
+                continue;
+            }
+            this.modules[r][6] = (r % 2 == 0);
+
+            if (this.modules[6][r] != null) {
+                continue;
+            }
+            this.modules[6][r] = (r % 2 == 0);
+        }
+    },
+    /**
+     * 设置矫正图形
+     * @return {[type]} [description]
+     */
+    setupPositionAdjustPattern: function() {
+
+        var pos = QRUtil.getPatternPosition(this.typeNumber);
+
+        for (var i = 0; i < pos.length; i++) {
+
+            for (var j = 0; j < pos.length; j++) {
+
+                var row = pos[i];
+                var col = pos[j];
+
+                if (this.modules[row][col] != null) {
+                    continue;
+                }
+
+                for (var r = -2; r <= 2; r++) {
+
+                    for (var c = -2; c <= 2; c++) {
+
+                        if (r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0)) {
+                            this.modules[row + r][col + c] = true;
+                        } else {
+                            this.modules[row + r][col + c] = false;
+                        }
+                    }
+                }
+            }
+        }
+    },
+    /**
+     * 设置版本信息（7以上版本才有）
+     * @param  {bool} test 是否处于判断最佳掩膜阶段
+     * @return {[type]}      [description]
+     */
+    setupTypeNumber: function(test) {
+
+        var bits = QRUtil.getBCHTypeNumber(this.typeNumber);
+
+        for (var i = 0; i < 18; i++) {
+            var mod = (!test && ((bits >> i) & 1) == 1);
+            this.modules[Math.floor(i / 3)][i % 3 + this.moduleCount - 8 - 3] = mod;
+            this.modules[i % 3 + this.moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+        }
+    },
+    /**
+     * 设置格式信息（纠错等级和掩膜版本）
+     * @param  {bool} test
+     * @param  {num} maskPattern 掩膜版本
+     * @return {}
+     */
+    setupTypeInfo: function(test, maskPattern) {
+
+        var data = (QRErrorCorrectLevel[this.errorCorrectLevel] << 3) | maskPattern;
+        var bits = QRUtil.getBCHTypeInfo(data);
+
+        // vertical
+        for (var i = 0; i < 15; i++) {
+
+            var mod = (!test && ((bits >> i) & 1) == 1);
+
+            if (i < 6) {
+                this.modules[i][8] = mod;
+            } else if (i < 8) {
+                this.modules[i + 1][8] = mod;
+            } else {
+                this.modules[this.moduleCount - 15 + i][8] = mod;
+            }
+
+            // horizontal
+            var mod = (!test && ((bits >> i) & 1) == 1);
+
+            if (i < 8) {
+                this.modules[8][this.moduleCount - i - 1] = mod;
+            } else if (i < 9) {
+                this.modules[8][15 - i - 1 + 1] = mod;
+            } else {
+                this.modules[8][15 - i - 1] = mod;
+            }
+        }
+
+        // fixed module
+        this.modules[this.moduleCount - 8][8] = (!test);
+
+    },
+    /**
+     * 数据编码
+     * @return {[type]} [description]
+     */
+    createData: function() {
+        var buffer = new QRBitBuffer();
+        var lengthBits = this.typeNumber > 9 ? 16 : 8;
+        buffer.put(4, 4); //添加模式
+        buffer.put(this.utf8bytes.length, lengthBits);
+        for (var i = 0, l = this.utf8bytes.length; i < l; i++) {
+            buffer.put(this.utf8bytes[i], 8);
+        }
+        if (buffer.length + 4 <= this.totalDataCount * 8) {
+            buffer.put(0, 4);
+        }
+
+        // padding
+        while (buffer.length % 8 != 0) {
+            buffer.putBit(false);
+        }
+
+        // padding
+        while (true) {
+
+            if (buffer.length >= this.totalDataCount * 8) {
+                break;
+            }
+            buffer.put(QRCodeAlg.PAD0, 8);
+
+            if (buffer.length >= this.totalDataCount * 8) {
+                break;
+            }
+            buffer.put(QRCodeAlg.PAD1, 8);
+        }
+        return this.createBytes(buffer);
+    },
+    /**
+     * 纠错码编码
+     * @param  {buffer} buffer 数据编码
+     * @return {[type]}
+     */
+    createBytes: function(buffer) {
+
+        var offset = 0;
+
+        var maxDcCount = 0;
+        var maxEcCount = 0;
+
+        var length = this.rsBlock.length / 3;
+
+        var rsBlocks = new Array();
+
+        for (var i = 0; i < length; i++) {
+
+            var count = this.rsBlock[i * 3 + 0];
+            var totalCount = this.rsBlock[i * 3 + 1];
+            var dataCount = this.rsBlock[i * 3 + 2];
+
+            for (var j = 0; j < count; j++) {
+                rsBlocks.push([dataCount, totalCount]);
+            }
+        }
+
+        var dcdata = new Array(rsBlocks.length);
+        var ecdata = new Array(rsBlocks.length);
+
+        for (var r = 0; r < rsBlocks.length; r++) {
+
+            var dcCount = rsBlocks[r][0];
+            var ecCount = rsBlocks[r][1] - dcCount;
+
+            maxDcCount = Math.max(maxDcCount, dcCount);
+            maxEcCount = Math.max(maxEcCount, ecCount);
+
+            dcdata[r] = new Array(dcCount);
+
+            for (var i = 0; i < dcdata[r].length; i++) {
+                dcdata[r][i] = 0xff & buffer.buffer[i + offset];
+            }
+            offset += dcCount;
+
+            var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+            var rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+            var modPoly = rawPoly.mod(rsPoly);
+            ecdata[r] = new Array(rsPoly.getLength() - 1);
+            for (var i = 0; i < ecdata[r].length; i++) {
+                var modIndex = i + modPoly.getLength() - ecdata[r].length;
+                ecdata[r][i] = (modIndex >= 0) ? modPoly.get(modIndex) : 0;
+            }
+        }
+
+        var data = new Array(this.totalDataCount);
+        var index = 0;
+
+        for (var i = 0; i < maxDcCount; i++) {
+            for (var r = 0; r < rsBlocks.length; r++) {
+                if (i < dcdata[r].length) {
+                    data[index++] = dcdata[r][i];
+                }
+            }
+        }
+
+        for (var i = 0; i < maxEcCount; i++) {
+            for (var r = 0; r < rsBlocks.length; r++) {
+                if (i < ecdata[r].length) {
+                    data[index++] = ecdata[r][i];
+                }
+            }
+        }
+
+        return data;
+
+    },
+    /**
+     * 布置模块，构建最终信息
+     * @param  {} data
+     * @param  {} maskPattern
+     * @return {}
+     */
+    mapData: function(data, maskPattern) {
+
+        var inc = -1;
+        var row = this.moduleCount - 1;
+        var bitIndex = 7;
+        var byteIndex = 0;
+
+        for (var col = this.moduleCount - 1; col > 0; col -= 2) {
+
+            if (col == 6) col--;
+
+            while (true) {
+
+                for (var c = 0; c < 2; c++) {
+
+                    if (this.modules[row][col - c] == null) {
+
+                        var dark = false;
+
+                        if (byteIndex < data.length) {
+                            dark = (((data[byteIndex] >>> bitIndex) & 1) == 1);
+                        }
+
+                        var mask = QRUtil.getMask(maskPattern, row, col - c);
+
+                        if (mask) {
+                            dark = !dark;
+                        }
+
+                        this.modules[row][col - c] = dark;
+                        bitIndex--;
+
+                        if (bitIndex == -1) {
+                            byteIndex++;
+                            bitIndex = 7;
+                        }
+                    }
+                }
+
+                row += inc;
+
+                if (row < 0 || this.moduleCount <= row) {
+                    row -= inc;
+                    inc = -inc;
+                    break;
+                }
+            }
+        }
+    },
+
+    //获取二维码数据
+    getData(){
+        return this.modules;
+    },
+    /**
+     * 判断是否为深色区域
+     * @param row
+     * @param col
+     * @returns {boolean}
+     */
+    isDark: function (row, col) {
+        return this.modules[row][col];
+    }
+};
+window.QRCodeAlg = QRCodeAlg
+/**
+ * 填充字段
+ */
+QRCodeAlg.PAD0 = 0xEC;
+QRCodeAlg.PAD1 = 0x11;
+
+
+//---------------------------------------------------------------------
+// 纠错等级对应的编码
+//---------------------------------------------------------------------
+
+var QRErrorCorrectLevel = [1, 0, 3, 2];
+
+//---------------------------------------------------------------------
+// 掩膜版本
+//---------------------------------------------------------------------
+
+var QRMaskPattern = {
+    PATTERN000: 0,
+    PATTERN001: 1,
+    PATTERN010: 2,
+    PATTERN011: 3,
+    PATTERN100: 4,
+    PATTERN101: 5,
+    PATTERN110: 6,
+    PATTERN111: 7
+};
+
+//---------------------------------------------------------------------
+// 工具类
+//---------------------------------------------------------------------
+
+var QRUtil = {
+
+    /*
+    每个版本矫正图形的位置
+     */
+    PATTERN_POSITION_TABLE: [
+        [],
+        [6, 18],
+        [6, 22],
+        [6, 26],
+        [6, 30],
+        [6, 34],
+        [6, 22, 38],
+        [6, 24, 42],
+        [6, 26, 46],
+        [6, 28, 50],
+        [6, 30, 54],
+        [6, 32, 58],
+        [6, 34, 62],
+        [6, 26, 46, 66],
+        [6, 26, 48, 70],
+        [6, 26, 50, 74],
+        [6, 30, 54, 78],
+        [6, 30, 56, 82],
+        [6, 30, 58, 86],
+        [6, 34, 62, 90],
+        [6, 28, 50, 72, 94],
+        [6, 26, 50, 74, 98],
+        [6, 30, 54, 78, 102],
+        [6, 28, 54, 80, 106],
+        [6, 32, 58, 84, 110],
+        [6, 30, 58, 86, 114],
+        [6, 34, 62, 90, 118],
+        [6, 26, 50, 74, 98, 122],
+        [6, 30, 54, 78, 102, 126],
+        [6, 26, 52, 78, 104, 130],
+        [6, 30, 56, 82, 108, 134],
+        [6, 34, 60, 86, 112, 138],
+        [6, 30, 58, 86, 114, 142],
+        [6, 34, 62, 90, 118, 146],
+        [6, 30, 54, 78, 102, 126, 150],
+        [6, 24, 50, 76, 102, 128, 154],
+        [6, 28, 54, 80, 106, 132, 158],
+        [6, 32, 58, 84, 110, 136, 162],
+        [6, 26, 54, 82, 110, 138, 166],
+        [6, 30, 58, 86, 114, 142, 170]
+    ],
+
+    G15: (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0),
+    G18: (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0),
+    G15_MASK: (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1),
+
+    /*
+    BCH编码格式信息
+     */
+    getBCHTypeInfo: function(data) {
+        var d = data << 10;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) >= 0) {
+            d ^= (QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15)));
+        }
+        return ((data << 10) | d) ^ QRUtil.G15_MASK;
+    },
+    /*
+    BCH编码版本信息
+     */
+    getBCHTypeNumber: function(data) {
+        var d = data << 12;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) >= 0) {
+            d ^= (QRUtil.G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18)));
+        }
+        return (data << 12) | d;
+    },
+    /*
+    获取BCH位信息
+     */
+    getBCHDigit: function(data) {
+
+        var digit = 0;
+
+        while (data != 0) {
+            digit++;
+            data >>>= 1;
+        }
+
+        return digit;
+    },
+    /*
+    获取版本对应的矫正图形位置
+     */
+    getPatternPosition: function(typeNumber) {
+        return QRUtil.PATTERN_POSITION_TABLE[typeNumber - 1];
+    },
+    /*
+    掩膜算法
+     */
+    getMask: function(maskPattern, i, j) {
+
+        switch (maskPattern) {
+
+            case QRMaskPattern.PATTERN000:
+                return (i + j) % 2 == 0;
+            case QRMaskPattern.PATTERN001:
+                return i % 2 == 0;
+            case QRMaskPattern.PATTERN010:
+                return j % 3 == 0;
+            case QRMaskPattern.PATTERN011:
+                return (i + j) % 3 == 0;
+            case QRMaskPattern.PATTERN100:
+                return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 == 0;
+            case QRMaskPattern.PATTERN101:
+                return (i * j) % 2 + (i * j) % 3 == 0;
+            case QRMaskPattern.PATTERN110:
+                return ((i * j) % 2 + (i * j) % 3) % 2 == 0;
+            case QRMaskPattern.PATTERN111:
+                return ((i * j) % 3 + (i + j) % 2) % 2 == 0;
+
+            default:
+                throw new Error("bad maskPattern:" + maskPattern);
+        }
+    },
+    /*
+    获取RS的纠错多项式
+     */
+    getErrorCorrectPolynomial: function(errorCorrectLength) {
+
+        var a = new QRPolynomial([1], 0);
+
+        for (var i = 0; i < errorCorrectLength; i++) {
+            a = a.multiply(new QRPolynomial([1, QRMath.gexp(i)], 0));
+        }
+
+        return a;
+    },
+    /*
+    获取评价
+     */
+    getLostPoint: function(qrCode) {
+
+        var moduleCount = qrCode.getModuleCount(),
+            lostPoint = 0,
+            darkCount = 0;
+
+        for (var row = 0; row < moduleCount; row++) {
+
+            var sameCount = 0;
+            var head = qrCode.modules[row][0];
+
+            for (var col = 0; col < moduleCount; col++) {
+
+                var current = qrCode.modules[row][col];
+
+                //level 3 评价
+                if( col < moduleCount-6){
+                    if (current && !qrCode.modules[row][ col + 1] && qrCode.modules[row][ col + 2] && qrCode.modules[row][ col + 3] && qrCode.modules[row][ col + 4] && !qrCode.modules[row][ col + 5] && qrCode.modules[row][ col + 6]) {
+                        if(col < moduleCount-10){
+                            if(qrCode.modules[row][ col + 7] &&qrCode.modules[row][ col + 8] &&qrCode.modules[row][ col + 9] &&qrCode.modules[row][ col + 10]){
+                                lostPoint += 40;
+                            }
+                        } else if(col > 3) {
+                            if(qrCode.modules[row][ col - 1] &&qrCode.modules[row][ col - 2] &&qrCode.modules[row][ col - 3] &&qrCode.modules[row][ col - 4]){
+                                lostPoint += 40;
+                            }
+                        }
+
+                    }
+                }
+
+                //level 2 评价
+                if( (row < moduleCount-1)&&(col < moduleCount-1) ){
+                    var count = 0;
+                    if (current) count++;
+                    if (qrCode.modules[row + 1][ col]) count++;
+                    if (qrCode.modules[row][ col + 1]) count++;
+                    if (qrCode.modules[row + 1][ col + 1]) count++;
+                    if (count == 0 || count == 4) {
+                        lostPoint += 3;
+                    }
+                }
+
+                //level 1 评价
+                if(head ^ current){
+                    sameCount ++;
+                } else {
+                    head = current;
+                    if (sameCount >= 5) {
+                        lostPoint += (3 + sameCount - 5);
+                    }
+                    sameCount = 1;
+                }
+
+                //level 4 评价
+                if (current) {
+                    darkCount++;
+                }
+
+            }
+        }
+
+        for (var col = 0; col < moduleCount; col++) {
+
+            var sameCount = 0;
+            var head = qrCode.modules[0][col];
+
+            for (var row = 0; row < moduleCount; row++) {
+
+                var current = qrCode.modules[row][col];
+
+                //level 3 评价
+                if( row < moduleCount-6){
+                    if (current && !qrCode.modules[row + 1][ col] && qrCode.modules[row + 2][ col] && qrCode.modules[row + 3][ col] && qrCode.modules[row + 4][ col] && !qrCode.modules[row + 5][ col] && qrCode.modules[row + 6][ col]) {
+                        if(row < moduleCount-10){
+                            if(qrCode.modules[row + 7][ col] && qrCode.modules[row + 8][ col]&& qrCode.modules[row + 9][ col]&& qrCode.modules[row + 10][ col]){
+                                lostPoint += 40;
+                            }
+                        } else if(row > 3) {
+                            if(qrCode.modules[row - 1][ col] && qrCode.modules[row - 2][ col]&& qrCode.modules[row - 3][ col]&& qrCode.modules[row - 4][ col]){
+                                lostPoint += 40;
+                            }
+                        }
+                    }
+                }
+
+                //level 1 评价
+                if(head ^ current){
+                    sameCount ++;
+                } else {
+                    head = current;
+                    if (sameCount >= 5) {
+                        lostPoint += (3 + sameCount - 5);
+                    }
+                    sameCount = 1;
+                }
+
+            }
+        }
+
+        // LEVEL4
+
+        var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+        lostPoint += ratio * 10;
+
+        return lostPoint;
+    }
+
+};
+
+
+//---------------------------------------------------------------------
+// QRMath使用的数学工具
+//---------------------------------------------------------------------
+
+var QRMath = {
+    /*
+    将n转化为a^m
+     */
+    glog: function(n) {
+
+        if (n < 1) {
+            throw new Error("glog(" + n + ")");
+        }
+
+        return QRMath.LOG_TABLE[n];
+    },
+    /*
+    将a^m转化为n
+     */
+    gexp: function(n) {
+
+        while (n < 0) {
+            n += 255;
+        }
+
+        while (n >= 256) {
+            n -= 255;
+        }
+
+        return QRMath.EXP_TABLE[n];
+    },
+
+    EXP_TABLE: new Array(256),
+
+    LOG_TABLE: new Array(256)
+
+};
+
+for (var i = 0; i < 8; i++) {
+    QRMath.EXP_TABLE[i] = 1 << i;
+}
+for (var i = 8; i < 256; i++) {
+    QRMath.EXP_TABLE[i] = QRMath.EXP_TABLE[i - 4] ^ QRMath.EXP_TABLE[i - 5] ^ QRMath.EXP_TABLE[i - 6] ^ QRMath.EXP_TABLE[i - 8];
+}
+for (var i = 0; i < 255; i++) {
+    QRMath.LOG_TABLE[QRMath.EXP_TABLE[i]] = i;
+}
+
+//---------------------------------------------------------------------
+// QRPolynomial 多项式
+//---------------------------------------------------------------------
+/**
+ * 多项式类
+ * @param {Array} num   系数
+ * @param {num} shift a^shift
+ */
+function QRPolynomial(num, shift) {
+
+    if (num.length == undefined) {
+        throw new Error(num.length + "/" + shift);
+    }
+
+    var offset = 0;
+
+    while (offset < num.length && num[offset] == 0) {
+        offset++;
+    }
+
+    this.num = new Array(num.length - offset + shift);
+    for (var i = 0; i < num.length - offset; i++) {
+        this.num[i] = num[i + offset];
+    }
+}
+
+QRPolynomial.prototype = {
+
+    get: function(index) {
+        return this.num[index];
+    },
+
+    getLength: function() {
+        return this.num.length;
+    },
+    /**
+     * 多项式乘法
+     * @param  {QRPolynomial} e 被乘多项式
+     * @return {[type]}   [description]
+     */
+    multiply: function(e) {
+
+        var num = new Array(this.getLength() + e.getLength() - 1);
+
+        for (var i = 0; i < this.getLength(); i++) {
+            for (var j = 0; j < e.getLength(); j++) {
+                num[i + j] ^= QRMath.gexp(QRMath.glog(this.get(i)) + QRMath.glog(e.get(j)));
+            }
+        }
+
+        return new QRPolynomial(num, 0);
+    },
+    /**
+     * 多项式模运算
+     * @param  {QRPolynomial} e 模多项式
+     * @return {}
+     */
+    mod: function(e) {
+        var tl = this.getLength(),
+            el = e.getLength();
+        if (tl - el < 0) {
+            return this;
+        }
+        var num = new Array(tl);
+        for (var i = 0; i < tl; i++) {
+            num[i] = this.get(i);
+        }
+        while (num.length >= el) {
+            var ratio = QRMath.glog(num[0]) - QRMath.glog(e.get(0));
+
+            for (var i = 0; i < e.getLength(); i++) {
+                num[i] ^= QRMath.gexp(QRMath.glog(e.get(i)) + ratio);
+            }
+            while (num[0] == 0) {
+                num.shift();
+            }
+        }
+        return new QRPolynomial(num, 0);
+    }
+};
+
+//---------------------------------------------------------------------
+// RS_BLOCK_TABLE
+//---------------------------------------------------------------------
+/*
+二维码各个版本信息[块数, 每块中的数据块数, 每块中的信息块数]
+ */
+var RS_BLOCK_TABLE = [
+
+// L
+// M
+// Q
+// H
+
+// 1
+    [1, 26, 19],
+    [1, 26, 16],
+    [1, 26, 13],
+    [1, 26, 9],
+
+    // 2
+    [1, 44, 34],
+    [1, 44, 28],
+    [1, 44, 22],
+    [1, 44, 16],
+
+    // 3
+    [1, 70, 55],
+    [1, 70, 44],
+    [2, 35, 17],
+    [2, 35, 13],
+
+    // 4
+    [1, 100, 80],
+    [2, 50, 32],
+    [2, 50, 24],
+    [4, 25, 9],
+
+    // 5
+    [1, 134, 108],
+    [2, 67, 43],
+    [2, 33, 15, 2, 34, 16],
+    [2, 33, 11, 2, 34, 12],
+
+    // 6
+    [2, 86, 68],
+    [4, 43, 27],
+    [4, 43, 19],
+    [4, 43, 15],
+
+    // 7
+    [2, 98, 78],
+    [4, 49, 31],
+    [2, 32, 14, 4, 33, 15],
+    [4, 39, 13, 1, 40, 14],
+
+    // 8
+    [2, 121, 97],
+    [2, 60, 38, 2, 61, 39],
+    [4, 40, 18, 2, 41, 19],
+    [4, 40, 14, 2, 41, 15],
+
+    // 9
+    [2, 146, 116],
+    [3, 58, 36, 2, 59, 37],
+    [4, 36, 16, 4, 37, 17],
+    [4, 36, 12, 4, 37, 13],
+
+    // 10
+    [2, 86, 68, 2, 87, 69],
+    [4, 69, 43, 1, 70, 44],
+    [6, 43, 19, 2, 44, 20],
+    [6, 43, 15, 2, 44, 16],
+
+    // 11
+    [4, 101, 81],
+    [1, 80, 50, 4, 81, 51],
+    [4, 50, 22, 4, 51, 23],
+    [3, 36, 12, 8, 37, 13],
+
+    // 12
+    [2, 116, 92, 2, 117, 93],
+    [6, 58, 36, 2, 59, 37],
+    [4, 46, 20, 6, 47, 21],
+    [7, 42, 14, 4, 43, 15],
+
+    // 13
+    [4, 133, 107],
+    [8, 59, 37, 1, 60, 38],
+    [8, 44, 20, 4, 45, 21],
+    [12, 33, 11, 4, 34, 12],
+
+    // 14
+    [3, 145, 115, 1, 146, 116],
+    [4, 64, 40, 5, 65, 41],
+    [11, 36, 16, 5, 37, 17],
+    [11, 36, 12, 5, 37, 13],
+
+    // 15
+    [5, 109, 87, 1, 110, 88],
+    [5, 65, 41, 5, 66, 42],
+    [5, 54, 24, 7, 55, 25],
+    [11, 36, 12],
+
+    // 16
+    [5, 122, 98, 1, 123, 99],
+    [7, 73, 45, 3, 74, 46],
+    [15, 43, 19, 2, 44, 20],
+    [3, 45, 15, 13, 46, 16],
+
+    // 17
+    [1, 135, 107, 5, 136, 108],
+    [10, 74, 46, 1, 75, 47],
+    [1, 50, 22, 15, 51, 23],
+    [2, 42, 14, 17, 43, 15],
+
+    // 18
+    [5, 150, 120, 1, 151, 121],
+    [9, 69, 43, 4, 70, 44],
+    [17, 50, 22, 1, 51, 23],
+    [2, 42, 14, 19, 43, 15],
+
+    // 19
+    [3, 141, 113, 4, 142, 114],
+    [3, 70, 44, 11, 71, 45],
+    [17, 47, 21, 4, 48, 22],
+    [9, 39, 13, 16, 40, 14],
+
+    // 20
+    [3, 135, 107, 5, 136, 108],
+    [3, 67, 41, 13, 68, 42],
+    [15, 54, 24, 5, 55, 25],
+    [15, 43, 15, 10, 44, 16],
+
+    // 21
+    [4, 144, 116, 4, 145, 117],
+    [17, 68, 42],
+    [17, 50, 22, 6, 51, 23],
+    [19, 46, 16, 6, 47, 17],
+
+    // 22
+    [2, 139, 111, 7, 140, 112],
+    [17, 74, 46],
+    [7, 54, 24, 16, 55, 25],
+    [34, 37, 13],
+
+    // 23
+    [4, 151, 121, 5, 152, 122],
+    [4, 75, 47, 14, 76, 48],
+    [11, 54, 24, 14, 55, 25],
+    [16, 45, 15, 14, 46, 16],
+
+    // 24
+    [6, 147, 117, 4, 148, 118],
+    [6, 73, 45, 14, 74, 46],
+    [11, 54, 24, 16, 55, 25],
+    [30, 46, 16, 2, 47, 17],
+
+    // 25
+    [8, 132, 106, 4, 133, 107],
+    [8, 75, 47, 13, 76, 48],
+    [7, 54, 24, 22, 55, 25],
+    [22, 45, 15, 13, 46, 16],
+
+    // 26
+    [10, 142, 114, 2, 143, 115],
+    [19, 74, 46, 4, 75, 47],
+    [28, 50, 22, 6, 51, 23],
+    [33, 46, 16, 4, 47, 17],
+
+    // 27
+    [8, 152, 122, 4, 153, 123],
+    [22, 73, 45, 3, 74, 46],
+    [8, 53, 23, 26, 54, 24],
+    [12, 45, 15, 28, 46, 16],
+
+    // 28
+    [3, 147, 117, 10, 148, 118],
+    [3, 73, 45, 23, 74, 46],
+    [4, 54, 24, 31, 55, 25],
+    [11, 45, 15, 31, 46, 16],
+
+    // 29
+    [7, 146, 116, 7, 147, 117],
+    [21, 73, 45, 7, 74, 46],
+    [1, 53, 23, 37, 54, 24],
+    [19, 45, 15, 26, 46, 16],
+
+    // 30
+    [5, 145, 115, 10, 146, 116],
+    [19, 75, 47, 10, 76, 48],
+    [15, 54, 24, 25, 55, 25],
+    [23, 45, 15, 25, 46, 16],
+
+    // 31
+    [13, 145, 115, 3, 146, 116],
+    [2, 74, 46, 29, 75, 47],
+    [42, 54, 24, 1, 55, 25],
+    [23, 45, 15, 28, 46, 16],
+
+    // 32
+    [17, 145, 115],
+    [10, 74, 46, 23, 75, 47],
+    [10, 54, 24, 35, 55, 25],
+    [19, 45, 15, 35, 46, 16],
+
+    // 33
+    [17, 145, 115, 1, 146, 116],
+    [14, 74, 46, 21, 75, 47],
+    [29, 54, 24, 19, 55, 25],
+    [11, 45, 15, 46, 46, 16],
+
+    // 34
+    [13, 145, 115, 6, 146, 116],
+    [14, 74, 46, 23, 75, 47],
+    [44, 54, 24, 7, 55, 25],
+    [59, 46, 16, 1, 47, 17],
+
+    // 35
+    [12, 151, 121, 7, 152, 122],
+    [12, 75, 47, 26, 76, 48],
+    [39, 54, 24, 14, 55, 25],
+    [22, 45, 15, 41, 46, 16],
+
+    // 36
+    [6, 151, 121, 14, 152, 122],
+    [6, 75, 47, 34, 76, 48],
+    [46, 54, 24, 10, 55, 25],
+    [2, 45, 15, 64, 46, 16],
+
+    // 37
+    [17, 152, 122, 4, 153, 123],
+    [29, 74, 46, 14, 75, 47],
+    [49, 54, 24, 10, 55, 25],
+    [24, 45, 15, 46, 46, 16],
+
+    // 38
+    [4, 152, 122, 18, 153, 123],
+    [13, 74, 46, 32, 75, 47],
+    [48, 54, 24, 14, 55, 25],
+    [42, 45, 15, 32, 46, 16],
+
+    // 39
+    [20, 147, 117, 4, 148, 118],
+    [40, 75, 47, 7, 76, 48],
+    [43, 54, 24, 22, 55, 25],
+    [10, 45, 15, 67, 46, 16],
+
+    // 40
+    [19, 148, 118, 6, 149, 119],
+    [18, 75, 47, 31, 76, 48],
+    [34, 54, 24, 34, 55, 25],
+    [20, 45, 15, 61, 46, 16]
+];
+
+/**
+ * 根据数据获取对应版本
+ * @return {[type]} [description]
+ */
+QRCodeAlg.prototype.getRightType = function() {
+    for (var typeNumber = 1; typeNumber < 41; typeNumber++) {
+        var rsBlock = RS_BLOCK_TABLE[(typeNumber - 1) * 4 + this.errorCorrectLevel];
+        if (rsBlock == undefined) {
+            throw new Error("bad rs block @ typeNumber:" + typeNumber + "/errorCorrectLevel:" + this.errorCorrectLevel);
+        }
+        var length = rsBlock.length / 3;
+        var totalDataCount = 0;
+        for (var i = 0; i < length; i++) {
+            var count = rsBlock[i * 3 + 0];
+            var dataCount = rsBlock[i * 3 + 2];
+            totalDataCount += dataCount * count;
+        }
+
+        var lengthBytes = typeNumber > 9 ? 2 : 1;
+        if (this.utf8bytes.length + lengthBytes < totalDataCount || typeNumber == 40) {
+            this.typeNumber = typeNumber;
+            this.rsBlock = rsBlock;
+            this.totalDataCount = totalDataCount;
+            break;
+        }
+    }
+};
+
+//---------------------------------------------------------------------
+// QRBitBuffer
+//---------------------------------------------------------------------
+
+function QRBitBuffer() {
+    this.buffer = new Array();
+    this.length = 0;
+}
+
+QRBitBuffer.prototype = {
+
+    get: function(index) {
+        var bufIndex = Math.floor(index / 8);
+        return ((this.buffer[bufIndex] >>> (7 - index % 8)) & 1);
+    },
+
+    put: function(num, length) {
+        for (var i = 0; i < length; i++) {
+            this.putBit(((num >>> (length - i - 1)) & 1));
+        }
+    },
+
+    putBit: function(bit) {
+
+        var bufIndex = Math.floor(this.length / 8);
+        if (this.buffer.length <= bufIndex) {
+            this.buffer.push(0);
+        }
+
+        if (bit) {
+            this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
+        }
+
+        this.length++;
+    }
+};
+
 var wxbridge;
 (function (wxbridge) {
-    var VersionUtil = /** @class */ (function () {
+    var VersionUtil = (function () {
         function VersionUtil() {
         }
         VersionUtil.compareVersion = function (v1, v2) {
@@ -63708,7 +64887,7 @@ var wxbridge;
 //# sourceMappingURL=VersionUtil.js.map
 var wxbridge;
 (function (wxbridge) {
-    var Touch = /** @class */ (function () {
+    var Touch = (function () {
         function Touch() {
         }
         //监听开始触摸事件
@@ -63778,7 +64957,7 @@ var wxbridge;
 //# sourceMappingURL=Touch.js.map
 var wxbridge;
 (function (wxbridge) {
-    var RewardVideoAd = /** @class */ (function () {
+    var RewardVideoAd = (function () {
         function RewardVideoAd() {
         }
         //激励视频广告组件默认是隐藏的，因此可以提前创建，以提前初始化组件。
@@ -63796,14 +64975,11 @@ var wxbridge;
                     // 用户点击了【关闭广告】按钮
                     // 小于 2.1.0 的基础库版本，res 是一个 undefined
                     if (res && res.isEnded || res === undefined) {
-                        // 正常播放结束，可以下发游戏奖励
                     }
                     else {
-                        // 播放中途退出，不下发游戏奖励
                     }
                 }
                 else {
-                    //直接发放奖励
                 }
             });
         };
@@ -63821,15 +64997,15 @@ var wxbridge;
                     .then(function () { return _this._video.show(); });
             });
         };
-        RewardVideoAd._video = null;
         return RewardVideoAd;
     }());
+    RewardVideoAd._video = null;
     wxbridge.RewardVideoAd = RewardVideoAd;
 })(wxbridge || (wxbridge = {}));
 //# sourceMappingURL=RewardVideoAd.js.map
 var wxbridge;
 (function (wxbridge) {
-    var Logger = /** @class */ (function () {
+    var Logger = (function () {
         function Logger() {
         }
         Logger.debug = function () {
@@ -63891,7 +65067,7 @@ var wxbridge;
 //# sourceMappingURL=Logger.js.map
 var wxbridge;
 (function (wxbridge) {
-    var BannerAd = /** @class */ (function () {
+    var BannerAd = (function () {
         function BannerAd() {
         }
         BannerAd.createBannerAd = function (adUnitId, x, y, width) {
@@ -63935,21 +65111,21 @@ var wxbridge;
                 this._bannerAd.hide();
             }
         };
-        /*
-            Banner 广告组件的尺寸会根据开发者设置的宽度，
-            即 style.width 进行等比缩放，缩放的范围是 300 到 屏幕宽度。
-            屏幕宽度是以逻辑像素为单位的宽度，通过 wx.getSystemInfoSync() 可以获取到。
-            const {screenWidth} = wx.getSystemInfoSync()
-         */
-        BannerAd._bannerAd = null;
         return BannerAd;
     }());
+    /*
+        Banner 广告组件的尺寸会根据开发者设置的宽度，
+        即 style.width 进行等比缩放，缩放的范围是 300 到 屏幕宽度。
+        屏幕宽度是以逻辑像素为单位的宽度，通过 wx.getSystemInfoSync() 可以获取到。
+        const {screenWidth} = wx.getSystemInfoSync()
+     */
+    BannerAd._bannerAd = null;
     wxbridge.BannerAd = BannerAd;
 })(wxbridge || (wxbridge = {}));
 //# sourceMappingURL=BannerAd.js.map
 var resolution;
 (function (resolution) {
-    var ResolutionConfig = /** @class */ (function () {
+    var ResolutionConfig = (function () {
         function ResolutionConfig() {
         }
         ResolutionConfig.getInstance = function () {
@@ -63985,17 +65161,17 @@ var resolution;
             ResolutionConfig.realWidth += Laya.stage.width + 2 * ResolutionConfig.diffWidth;
             ResolutionConfig.realHeight += Laya.stage.height + 2 * ResolutionConfig.diffHight;
         };
-        ResolutionConfig.__instance = undefined;
-        //左偏移量
-        ResolutionConfig.diffWidth = 0;
-        //右偏移量
-        ResolutionConfig.diffHight = 0;
-        //真实的宽度
-        ResolutionConfig.realWidth = 0;
-        //真实的高度
-        ResolutionConfig.realHeight = 0;
         return ResolutionConfig;
     }());
+    ResolutionConfig.__instance = undefined;
+    //左偏移量
+    ResolutionConfig.diffWidth = 0;
+    //右偏移量
+    ResolutionConfig.diffHight = 0;
+    //真实的宽度
+    ResolutionConfig.realWidth = 0;
+    //真实的高度
+    ResolutionConfig.realHeight = 0;
     resolution.ResolutionConfig = ResolutionConfig;
 })(resolution || (resolution = {}));
 //# sourceMappingURL=ResolutionConfig.js.map
@@ -64004,7 +65180,7 @@ var resolution;
     /*
     附加脚本对应的逻辑类
     */
-    var Resolution = /** @class */ (function () {
+    var Resolution = (function () {
         function Resolution() {
         }
         Object.defineProperty(Resolution.prototype, "owner", {
@@ -64067,11 +65243,139 @@ var resolution;
 //# sourceMappingURL=Resolution.js.map
 var util;
 (function (util) {
+    var Qrcode = (function () {
+        function Qrcode() {
+        }
+        Qrcode.createQrcode = function (message, codeWidth, codeHeight) {
+            var texture = new Laya.Sprite();
+            var QRCodeAlg = Laya.Browser.window.QRCodeAlg;
+            var qrcode = new QRCodeAlg(message, 3);
+            var datas = qrcode.getData();
+            var unit = 10;
+            var pixels = datas[0].length * unit;
+            texture.width = pixels;
+            texture.height = pixels;
+            for (var rowIdx = 0; rowIdx < datas.length; rowIdx++) {
+                var rows = datas[rowIdx];
+                for (var colIdx = 0; colIdx < rows.length; colIdx++) {
+                    var x = colIdx * unit;
+                    var y = rowIdx * unit;
+                    if (datas[rowIdx][colIdx]) {
+                        texture.graphics.drawRect(x, y, unit, unit, "#000000");
+                    }
+                }
+            }
+            var icon = new Laya.Image();
+            icon.skin = "update/icon.png";
+            icon.pivotX = 0.5;
+            icon.pivotY = 0.5;
+            icon.x = texture.width / 2 - icon.width / 2;
+            icon.y = texture.height / 2 - icon.height / 2;
+            texture.addChild(icon);
+            Laya.stage.addChild(texture);
+            var htmlC = Laya.stage.drawToCanvas(texture.width, texture.height, 0, 0);
+            //获取截屏区域的texture
+            var newTexture = new laya.resource.Texture(htmlC);
+            var targetSprite = new Laya.Sprite();
+            targetSprite.graphics.drawTexture(newTexture, 0, 0, codeWidth, codeHeight);
+            Laya.stage.addChild(targetSprite);
+            texture.removeSelf();
+            return targetSprite;
+        };
+        return Qrcode;
+    }());
+    util.Qrcode = Qrcode;
+})(util || (util = {}));
+//# sourceMappingURL=Qrcode.js.map
+var util;
+(function (util) {
+    var Bezier = (function () {
+        function Bezier() {
+        }
+        Bezier.Convert = function (posArray, num) {
+            var size = posArray.length;
+            if (size < 2)
+                return;
+            var xarray = {};
+            var yarray = {};
+            var startIdx = 1;
+            var bezierPositions = new Array();
+            if (num == null || num == undefined) {
+                num = 100; //默认取曲线上的100个样本点
+            }
+            for (var t = 0; t <= 1; t += 1 / num) {
+                //当i = 2 的时候就已经把三阶bezier曲线计算出来了,所以N阶的话i最大为size-1
+                for (var i = startIdx; i <= size - 1; i++) {
+                    //因为计算公式中有j+1,,所以j的最大取值为size-1
+                    for (var j = startIdx; j <= size - i; j++) {
+                        if (i == startIdx) {
+                            xarray[j] = posArray[j].x * (1 - t) + posArray[j + 1].x * t;
+                            yarray[j] = posArray[j].y * (1 - t) + posArray[j + 1].y * t;
+                            continue;
+                        }
+                        // i != 2时,通过上一次迭代的结果计算
+                        xarray[j] = xarray[j] * (1 - t) + xarray[j + 1] * t;
+                        yarray[j] = yarray[j] * (1 - t) + yarray[j + 1] * t;
+                    }
+                }
+                //经过多轮合并之后最后叠加的结果被放在第一个元素中
+                //这么多轮的合并只是为了计算出一个再bezier曲线上的点...
+                bezierPositions.push({ x: xarray[1], y: yarray[1] });
+            }
+            return bezierPositions;
+        };
+        Bezier.BezierTo = function (source, target, num) {
+            var controlNum = Math.random() * 5 + 3;
+            var dx = target.x - source.x;
+            var dy = target.y - source.y;
+            var array = new Array();
+            array.push(source);
+            for (var i = 1; i <= controlNum; i++) {
+                var zf = void 0;
+                Math.random() > 0.5 && (zf = 1) || (zf = -1);
+                var x = source.x + dx / controlNum * i;
+                var y = source.y + dy / controlNum * i + zf * Math.random() * 100 + 50;
+                var pos = { x: x, y: y };
+                array.push(pos);
+            }
+            array.push(target);
+            var bezierPositions = Bezier.Convert(array, num);
+            Bezier.Filter(bezierPositions);
+            return bezierPositions;
+        };
+        // 将所有的坐标改成整数的,并剔除重复的坐标
+        Bezier.Filter = function (bezierPositions) {
+            var filters = {};
+            bezierPositions.forEach(function (pos) {
+                pos.x = Math.floor(pos.x);
+                pos.y = Math.floor(pos.y);
+                if (filters["" + pos.x + pos.y]) {
+                    pos.remove = true;
+                }
+                else {
+                    filters["" + pos.x + pos.y] = true;
+                }
+            });
+            for (var i = bezierPositions.length; i >= 1; i--) {
+                var pos = bezierPositions[i];
+                if (pos.remove) {
+                    bezierPositions.splice(i, 1);
+                }
+            }
+            return bezierPositions;
+        };
+        return Bezier;
+    }());
+    util.Bezier = Bezier;
+})(util || (util = {}));
+//# sourceMappingURL=Bezier.js.map
+var util;
+(function (util) {
     /**
      * HashMap
      * key不能是object，否则会出问题
      */
-    var HashMap = /** @class */ (function () {
+    var HashMap = (function () {
         function HashMap() {
             this.len = 0;
             this.obj = new Object();
@@ -64139,7 +65443,7 @@ var util;
     /**
      *  OrderedMap
      */
-    var OrderedMap = /** @class */ (function () {
+    var OrderedMap = (function () {
         function OrderedMap() {
             this.keyEles = [];
             this.elements = [];
@@ -64205,7 +65509,7 @@ var util;
         return OrderedMap;
     }());
     util.OrderedMap = OrderedMap;
-    var MapIterator = /** @class */ (function () {
+    var MapIterator = (function () {
         function MapIterator(e) {
             this.elements = e;
             this.ps = 0;
@@ -64231,26 +65535,17 @@ var util;
     util.MapIterator = MapIterator;
 })(util || (util = {}));
 //# sourceMappingURL=Map.js.map
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var UIManagerInternal;
 (function (UIManagerInternal) {
-    var _a;
     /**
      * ui管理类，通过名字管理界面
     */
-    var UIManager = /** @class */ (function () {
+    var UIManager = (function () {
         function UIManager() {
             this.gameUIs = new util.OrderedMap();
         }
@@ -64439,22 +65734,23 @@ var UIManagerInternal;
                 }
             }
         };
-        UIManager.GLOBAL_UI_ID = 0;
-        UIManager.LAYER_START = 0;
-        UIManager.LAYER_NORMAL = 0;
-        UIManager.LAYER_OVERLAY = 1;
-        UIManager.LAYER_OVERLAY_1 = 2;
-        UIManager.LAYER_MAX = 2;
-        UIManager.LAYER_ORDER = (_a = {},
-            _a[UIManager.LAYER_NORMAL] = 0,
-            _a[UIManager.LAYER_OVERLAY] = 100,
-            _a[UIManager.LAYER_OVERLAY_1] = 200,
-            _a);
         return UIManager;
     }());
+    UIManager.GLOBAL_UI_ID = 0;
+    UIManager.LAYER_START = 0;
+    UIManager.LAYER_NORMAL = 0;
+    UIManager.LAYER_OVERLAY = 1;
+    UIManager.LAYER_OVERLAY_1 = 2;
+    UIManager.LAYER_MAX = 2;
+    UIManager.LAYER_ORDER = (_a = {},
+        _a[UIManager.LAYER_NORMAL] = 0,
+        _a[UIManager.LAYER_OVERLAY] = 100,
+        _a[UIManager.LAYER_OVERLAY_1] = 200,
+        _a);
     UIManagerInternal.UIManager = UIManager;
+    var _a;
 })(UIManagerInternal || (UIManagerInternal = {}));
-var UIManager = /** @class */ (function (_super) {
+var UIManager = (function (_super) {
     __extends(UIManager, _super);
     function UIManager() {
         return _super !== null && _super.apply(this, arguments) || this;
@@ -64462,44 +65758,36 @@ var UIManager = /** @class */ (function (_super) {
     return UIManager;
 }(UIManagerInternal.UIManager));
 //# sourceMappingURL=UIManager.js.map
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var View = laya.ui.View;
 var Dialog = laya.ui.Dialog;
 var ui;
 (function (ui) {
-    var gameStart;
-    (function (gameStart) {
-        var GameStartViewUI = /** @class */ (function (_super) {
+    var game;
+    (function (game) {
+        var GameStartViewUI = (function (_super) {
             __extends(GameStartViewUI, _super);
             function GameStartViewUI() {
                 return _super.call(this) || this;
             }
             GameStartViewUI.prototype.createChildren = function () {
                 _super.prototype.createChildren.call(this);
-                this.createView(ui.gameStart.GameStartViewUI.uiView);
+                this.createView(ui.game.GameStartViewUI.uiView);
             };
-            GameStartViewUI.uiView = { "type": "View", "props": { "width": 1136, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 259, "x": 520, "skin": "texture/cbtnAwards1.png" } }, { "type": "Image", "props": { "y": 400, "x": 469, "skin": "texture/cbtnBack1.png" } }, { "type": "Image", "props": { "y": 374, "x": 597, "skin": "texture/cbtnCredits1.png" } }] };
             return GameStartViewUI;
         }(View));
-        gameStart.GameStartViewUI = GameStartViewUI;
-    })(gameStart = ui.gameStart || (ui.gameStart = {}));
+        GameStartViewUI.uiView = { "type": "View", "props": { "width": 1136, "height": 640 }, "child": [{ "type": "Image", "props": { "y": 259, "x": 520, "skin": "texture/cbtnAwards1.png" } }, { "type": "Image", "props": { "y": 400, "x": 469, "skin": "texture/cbtnBack1.png" } }, { "type": "Image", "props": { "y": 374, "x": 597, "skin": "texture/cbtnCredits1.png" } }] };
+        game.GameStartViewUI = GameStartViewUI;
+    })(game = ui.game || (ui.game = {}));
 })(ui || (ui = {}));
 (function (ui) {
     var update;
     (function (update) {
-        var UpdateViewUI = /** @class */ (function (_super) {
+        var UpdateViewUI = (function (_super) {
             __extends(UpdateViewUI, _super);
             function UpdateViewUI() {
                 return _super.call(this) || this;
@@ -64509,32 +65797,24 @@ var ui;
                 _super.prototype.createChildren.call(this);
                 this.createView(ui.update.UpdateViewUI.uiView);
             };
-            UpdateViewUI.uiView = { "type": "View", "props": { "width": 1136, "renderType": "render", "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 1136, "skin": "update/bg.png", "sizeGrid": "1,1,1,1", "height": 640 }, "child": [{ "type": "Script", "props": { "layoutWidth": true, "layoutHeight": true, "runtime": "resolution.Resolution" } }] }, { "type": "Box", "props": { "y": 0, "x": 0, "width": 1136, "height": 640 }, "child": [{ "type": "Script", "props": { "y": 217, "x": 115, "center": true, "runtime": "resolution.Resolution" } }, { "type": "Image", "props": { "y": 217, "x": 371, "skin": "update/logo.png" } }, { "type": "ProgressBar", "props": { "y": 570, "x": 115, "var": "progressLoad", "skin": "update/progress.png" } }] }] };
             return UpdateViewUI;
         }(View));
+        UpdateViewUI.uiView = { "type": "View", "props": { "width": 1136, "renderType": "render", "height": 640 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 1136, "skin": "update/bg.png", "sizeGrid": "1,1,1,1", "height": 640 }, "child": [{ "type": "Script", "props": { "layoutWidth": true, "layoutHeight": true, "runtime": "resolution.Resolution" } }] }, { "type": "Box", "props": { "y": 0, "x": 0, "width": 1136, "height": 640 }, "child": [{ "type": "Script", "props": { "y": 217, "x": 115, "center": true, "runtime": "resolution.Resolution" } }, { "type": "Image", "props": { "y": 217, "x": 371, "skin": "update/logo.png" } }, { "type": "ProgressBar", "props": { "y": 570, "x": 115, "var": "progressLoad", "skin": "update/progress.png" } }] }] };
         update.UpdateViewUI = UpdateViewUI;
     })(update = ui.update || (ui.update = {}));
 })(ui || (ui = {}));
 //# sourceMappingURL=layaUI.max.all.js.map
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 /**Created by the LayaAirIDE*/
 var view;
 (function (view) {
     var game;
     (function (game) {
-        var GameStartView = /** @class */ (function (_super) {
+        var GameStartView = (function (_super) {
             __extends(GameStartView, _super);
             function GameStartView() {
                 var _this = _super.call(this) || this;
@@ -64598,30 +65878,22 @@ var view;
             GameStartView.prototype.OnShow = function () {
             };
             return GameStartView;
-        }(ui.gameStart.GameStartViewUI));
+        }(ui.game.GameStartViewUI));
         game.GameStartView = GameStartView;
     })(game = view.game || (view.game = {}));
 })(view || (view = {}));
 //# sourceMappingURL=GameStartView.js.map
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 /**Created by the LayaAirIDE*/
 var view;
 (function (view) {
     var update;
     (function (update) {
-        var UpdateView = /** @class */ (function (_super) {
+        var UpdateView = (function (_super) {
             __extends(UpdateView, _super);
             function UpdateView() {
                 return _super.call(this) || this;
@@ -64635,6 +65907,8 @@ var view;
             UpdateView.prototype.onLoaded = function () {
                 // UIManager.getInstance().Hide(view.update.UpdateView)
                 // UIManager.getInstance().Show(view.game.GameStartView);
+                var texture = util.Qrcode.createQrcode("赵庆龙", 300, 300);
+                Laya.stage.addChild(texture);
             };
             UpdateView.prototype.onLoading = function (value) {
                 this.progressLoad.value = value;
@@ -64654,7 +65928,7 @@ var view;
 //# sourceMappingURL=UpdateView.js.map
 var WebGL = Laya.WebGL;
 // 程序入口
-var GameMain = /** @class */ (function () {
+var GameMain = (function () {
     function GameMain() {
         var DESIGN_RESOLUTION = {
             width: 1136,

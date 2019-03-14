@@ -3,7 +3,7 @@ module util{
         public static createQrcode(message,codeWidth,codeHeight){
             let texture = new Laya.Sprite();
             let QRCodeAlg = Laya.Browser.window.QRCodeAlg;
-            let qrcode = new QRCodeAlg("赵庆龙", 2)
+            let qrcode = new QRCodeAlg(message, 3)
             let datas = qrcode.getData()
             
             let unit = 10
@@ -20,6 +20,14 @@ module util{
                     }
                 }
             }
+            let icon = new Laya.Image();
+            icon.skin = "update/icon.png"
+            icon.pivotX = 0.5;
+            icon.pivotY = 0.5;
+            icon.x = texture.width/2 - icon.width/2;
+            icon.y = texture.height/2 - icon.height/2;
+            texture.addChild(icon)
+
             Laya.stage.addChild(texture)
             let htmlC = Laya.stage.drawToCanvas(texture.width,texture.height,0,0);  
     		 
